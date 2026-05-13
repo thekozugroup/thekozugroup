@@ -1,9 +1,5 @@
 ## thekozugroup
 
-<p align="center">
-  <img src="https://avatars.githubusercontent.com/u/265635778?v=4" width="80" height="80" style="border-radius: 50%;" alt="thekozugroup" />
-</p>
-
 <p align="center"><b>Activity · Languages · Contributions</b></p>
 
 <p align="center">

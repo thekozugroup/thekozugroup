@@ -122,15 +122,16 @@ function generateContributionGraph(data) {
   const weeks = data.user.contributionsCollection.contributionCalendar.weeks;
   const levels = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
   
-  const cellSize = 8;
+  const cellSize = 6;
   const cellGap = 2;
-  const weeksToShow = Math.min(weeks.length, 52);
-  const graphWidth = weeksToShow * (cellSize + cellGap);
-  const graphHeight = 7 * (cellSize + cellGap);
+  const weekStride = cellSize + cellGap;
+  const weeksToShow = Math.min(weeks.length, 48); // ~11 months fits cleanly
+  const graphWidth = weeksToShow * weekStride;
+  const graphHeight = 7 * weekStride;
   
-  // Center the graph
-  const offsetX = ((CARD_WIDTH - CARD_PADDING * 2) - graphWidth) / 2;
-  const offsetY = 10;
+  const contentWidth = CARD_WIDTH - CARD_PADDING * 2;
+  const offsetX = (contentWidth - graphWidth) / 2;
+  const offsetY = 14;
 
   let cells = '';
   const monthLabels = [];
@@ -149,9 +150,9 @@ function generateContributionGraph(data) {
       else if (count <= 8) color = levels[3];
       else color = levels[4];
 
-      const x = offsetX + w * (cellSize + cellGap);
-      const y = offsetY + d * (cellSize + cellGap);
-      cells += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="2" fill="${color}"/>\n`;
+      const x = offsetX + w * weekStride;
+      const y = offsetY + d * weekStride;
+      cells += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="1.5" fill="${color}"/>\n`;
     }
 
     const firstDay = week.contributionDays[0];
@@ -159,7 +160,7 @@ function generateContributionGraph(data) {
       const month = new Date(firstDay.date).getMonth();
       if (month !== lastMonth && w % 4 === 0) {
         monthLabels.push({
-          x: offsetX + w * (cellSize + cellGap),
+          x: offsetX + w * weekStride,
           label: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month]
         });
         lastMonth = month;
@@ -175,23 +176,29 @@ function generateContributionGraph(data) {
   const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
   dayLabels.forEach((label, i) => {
     if (label) {
-      labels += `<text x="${offsetX - 4}" y="${offsetY + i * (cellSize + cellGap) + 7}" text-anchor="end" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">${label}</text>\n`;
+      labels += `<text x="${offsetX - 6}" y="${offsetY + i * weekStride + 5}" text-anchor="end" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">${label}</text>\n`;
     }
   });
 
-  // Legend
-  const legendY = offsetY + graphHeight + 18;
-  const legendX = offsetX + graphWidth - 100;
+  // Legend — positioned at right edge of card content area
+  const legendY = offsetY + graphHeight + 14;
+  const legendRightX = contentWidth;
+  const legendItemWidth = 10;
+  const legendGap = 3;
+  const legendTotalWidth = 30 + (levels.length * legendItemWidth) + ((levels.length - 1) * legendGap) + 4;
+  const legendX = legendRightX - legendTotalWidth;
+  
   let legend = `<text x="${legendX}" y="${legendY}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">Less</text>\n`;
   levels.forEach((color, i) => {
-    legend += `<rect x="${legendX + 30 + i * 12}" y="${legendY - 8}" width="8" height="8" rx="2" fill="${color}"/>\n`;
+    legend += `<rect x="${legendX + 30 + i * (legendItemWidth + legendGap)}" y="${legendY - 8}" width="${legendItemWidth}" height="${legendItemWidth}" rx="2" fill="${color}"/>\n`;
   });
-  legend += `<text x="${legendX + 30 + levels.length * 12 + 4}" y="${legendY}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">More</text>\n`;
+  legend += `<text x="${legendX + 30 + levels.length * (legendItemWidth + legendGap)}" y="${legendY}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">More</text>\n`;
 
   const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
 
   const content = labels + cells + legend;
-  const svg = cardShell('Contribution Activity', icon, content, 180);
+  const contentHeight = offsetY + graphHeight + 28;
+  const svg = cardShell('Contribution Activity', icon, content, 56 + contentHeight);
   fs.writeFileSync('stats/contributions.svg', svg);
 }
 
