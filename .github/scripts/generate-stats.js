@@ -125,12 +125,12 @@ function generateContributionGraph(data) {
   const cellSize = 6;
   const cellGap = 2;
   const weekStride = cellSize + cellGap;
-  const weeksToShow = Math.min(weeks.length, 48); // ~11 months fits cleanly
+  const weeksToShow = Math.min(weeks.length, 36); // ~8 months, guaranteed margin
   const graphWidth = weeksToShow * weekStride;
   const graphHeight = 7 * weekStride;
   
   const contentWidth = CARD_WIDTH - CARD_PADDING * 2;
-  const offsetX = (contentWidth - graphWidth) / 2;
+  const offsetX = 28; // fixed left margin instead of center (simpler, leaves room on right)
   const offsetY = 14;
 
   let cells = '';
