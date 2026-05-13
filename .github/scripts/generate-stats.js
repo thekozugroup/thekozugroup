@@ -260,16 +260,19 @@ async function fetchRestLanguages(repos) {
 }
 
 async function generateLanguageCard(sortedLangs) {
+  // Filter out microscopic bars (less than 1% looks broken)
+  const filteredLangs = sortedLangs.filter(l => parseFloat(l.percent) >= 1.0);
+  
   const barHeight = 22;
   const barGap = 10;
   const labelWidth = 110;
-  const graphContentHeight = sortedLangs.length * (barHeight + barGap);
+  const graphContentHeight = filteredLangs.length * (barHeight + barGap);
   
   let langContent = '';
-  sortedLangs.forEach((lang, i) => {
+  filteredLangs.forEach((lang, i) => {
     const y = i * (barHeight + barGap);
     const barMaxWidth = (CARD_WIDTH - CARD_PADDING * 2) - labelWidth - 50;
-    const barWidth = (parseFloat(lang.percent) / 100) * barMaxWidth;
+    const barWidth = Math.max((parseFloat(lang.percent) / 100) * barMaxWidth, 4); // Min 4px so tiny bars still visible
     
     langContent += `  <circle cx="6" cy="${y + barHeight/2}" r="5" fill="${lang.color}"/>
   <text x="20" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="13" font-weight="500" fill="${TEXT_PRIMARY}">${lang.name}</text>

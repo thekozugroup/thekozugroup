@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="480" height="312" xmlns="http://www.w3.org/2000/svg">
+<svg width="480" height="184" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="shadow-agc9vvlu6p9" x="-2%" y="-2%" width="108%" height="112%">
+    <filter id="shadow-upoavqb6qx" x="-2%" y="-2%" width="108%" height="112%">
       <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.06"/>
     </filter>
   </defs>
-  <rect x="0" y="0" width="480" height="312" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-agc9vvlu6p9)"/>
+  <rect x="0" y="0" width="480" height="184" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-upoavqb6qx)"/>
   <g transform="translate(24, 20)">
     <g transform="scale(0.9)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></g>
     <text x="28" y="14" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#9ca3af" letter-spacing="0.08em" text-transform="uppercase">MOST USED LANGUAGES</text>
@@ -15,43 +15,23 @@
       <circle cx="6" cy="11" r="5" fill="#3572A5"/>
   <text x="20" y="15" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Python</text>
   <rect x="110" y="3" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="3" width="136.816" height="16" rx="4" fill="#3572A5" opacity="0.85"/>
-  <text x="392" y="15" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">50.3%</text>
+  <rect x="110" y="3" width="139.536" height="16" rx="4" fill="#3572A5" opacity="0.85"/>
+  <text x="392" y="15" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">51.3%</text>
   <circle cx="6" cy="43" r="5" fill="#dea584"/>
   <text x="20" y="47" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Rust</text>
   <rect x="110" y="35" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="35" width="73.44" height="16" rx="4" fill="#dea584" opacity="0.85"/>
-  <text x="392" y="47" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">27.0%</text>
+  <rect x="110" y="35" width="69.36" height="16" rx="4" fill="#dea584" opacity="0.85"/>
+  <text x="392" y="47" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">25.5%</text>
   <circle cx="6" cy="75" r="5" fill="#3178c6"/>
   <text x="20" y="79" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">TypeScript</text>
   <rect x="110" y="67" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="67" width="41.616" height="16" rx="4" fill="#3178c6" opacity="0.85"/>
-  <text x="392" y="79" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">15.3%</text>
+  <rect x="110" y="67" width="42.704" height="16" rx="4" fill="#3178c6" opacity="0.85"/>
+  <text x="392" y="79" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">15.7%</text>
   <circle cx="6" cy="107" r="5" fill="#A97BFF"/>
   <text x="20" y="111" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Kotlin</text>
   <rect x="110" y="99" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="99" width="15.232" height="16" rx="4" fill="#A97BFF" opacity="0.85"/>
-  <text x="392" y="111" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">5.6%</text>
-  <circle cx="6" cy="139" r="5" fill="#89e051"/>
-  <text x="20" y="143" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Shell</text>
-  <rect x="110" y="131" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="131" width="1.904" height="16" rx="4" fill="#89e051" opacity="0.85"/>
-  <text x="392" y="143" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">0.7%</text>
-  <circle cx="6" cy="171" r="5" fill="#563d7c"/>
-  <text x="20" y="175" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">CSS</text>
-  <rect x="110" y="163" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="163" width="0.8160000000000001" height="16" rx="4" fill="#563d7c" opacity="0.85"/>
-  <text x="392" y="175" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">0.3%</text>
-  <circle cx="6" cy="203" r="5" fill="#6e7681"/>
-  <text x="20" y="207" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Jinja</text>
-  <rect x="110" y="195" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="195" width="0.8160000000000001" height="16" rx="4" fill="#6e7681" opacity="0.85"/>
-  <text x="392" y="207" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">0.3%</text>
-  <circle cx="6" cy="235" r="5" fill="#384d54"/>
-  <text x="20" y="239" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#111827">Dockerfile</text>
-  <rect x="110" y="227" width="272" height="16" rx="4" fill="#f3f4f6"/>
-  <rect x="110" y="227" width="0.544" height="16" rx="4" fill="#384d54" opacity="0.85"/>
-  <text x="392" y="239" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">0.2%</text>
+  <rect x="110" y="99" width="15.776" height="16" rx="4" fill="#A97BFF" opacity="0.85"/>
+  <text x="392" y="111" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" fill="#6b7280">5.8%</text>
 
   </g>
 </svg>
