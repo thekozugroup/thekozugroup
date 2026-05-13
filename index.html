@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>thekozugroup | About</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(214.3, 31.8%, 91.4%)',
+            input: 'hsl(214.3, 31.8%, 91.4%)',
+            ring: 'hsl(221.2, 83.2%, 53.3%)',
+            background: 'hsl(0, 0%, 100%)',
+            foreground: 'hsl(222.2, 84%, 4.9%)',
+            primary: {
+              DEFAULT: 'hsl(221.2, 83.2%, 53.3%)',
+              foreground: 'hsl(210, 40%, 98%)',
+            },
+            secondary: {
+              DEFAULT: 'hsl(210, 40%, 96.1%)',
+              foreground: 'hsl(222.2, 47.4%, 11.2%)',
+            },
+            muted: {
+              DEFAULT: 'hsl(210, 40%, 96.1%)',
+              foreground: 'hsl(215.4, 16.3%, 46.9%)',
+            },
+            accent: {
+              DEFAULT: 'hsl(210, 40%, 96.1%)',
+              foreground: 'hsl(222.2, 47.4%, 11.2%)',
+            },
+            card: {
+              DEFAULT: 'hsl(0, 0%, 100%)',
+              foreground: 'hsl(222.2, 84%, 4.9%)',
+            },
+            popover: {
+              DEFAULT: 'hsl(0, 0%, 100%)',
+              foreground: 'hsl(222.2, 84%, 4.9%)',
+            },
+            destructive: {
+              DEFAULT: 'hsl(0, 84.2%, 60.2%)',
+              foreground: 'hsl(210, 40%, 98%)',
+            },
+          },
+          borderRadius: {
+            lg: '0.5rem',
+            md: '0.375rem',
+            sm: '0.25rem',
+          },
+        },
+      },
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      * {
+        @apply border-border;
+      }
+      body {
+        @apply bg-background text-foreground;
+      }
+    }
+    @layer components {
+      .card {
+        @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+      }
+      .card-header {
+        @apply flex flex-col space-y-1.5 p-6;
+      }
+      .card-title {
+        @apply text-2xl font-semibold leading-none tracking-tight;
+      }
+      .card-description {
+        @apply text-sm text-muted-foreground;
+      }
+      .card-content {
+        @apply p-6 pt-0;
+      }
+      .badge {
+        @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+      }
+      .badge-secondary {
+        @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+      }
+      .badge-outline {
+        @apply text-foreground;
+      }
+      .progress {
+        @apply relative h-4 w-full overflow-hidden rounded-full bg-secondary;
+      }
+      .progress-bar {
+        @apply h-full w-full flex-1 bg-primary transition-all;
+      }
+      .skeleton {
+        @apply animate-pulse rounded-md bg-muted;
+      }
+      .separator {
+        @apply shrink-0 bg-border h-[1px] w-full;
+      }
+      .avatar {
+        @apply relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full;
+      }
+      .avatar-image {
+        @apply aspect-square h-full w-full;
+      }
+      .avatar-fallback {
+        @apply flex h-full w-full items-center justify-center rounded-full bg-muted;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <div class="container mx-auto max-w-5xl py-12 px-4">
+    
+    <!-- Loading State -->
+    <div id="loading" class="space-y-8">
+      <div class="flex gap-8">
+        <div class="skeleton w-32 h-32 rounded-full"></div>
+        <div class="space-y-4 flex-1">
+          <div class="skeleton h-8 w-64"></div>
+          <div class="skeleton h-4 w-32"></div>
+          <div class="skeleton h-16 w-full max-w-2xl"></div>
+          <div class="skeleton h-4 w-48"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="skeleton h-64 lg:col-span-1"></div>
+        <div class="skeleton h-64 lg:col-span-2"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div id="content" class="hidden space-y-12">
+      
+      <!-- Profile Header -->
+      <div class="flex flex-col md:flex-row items-start gap-8">
+        <div class="avatar w-32 h-32 border-4 border-white shadow-xl">
+          <img id="avatar" src="" alt="" class="avatar-image">
+          <div class="avatar-fallback text-4xl font-bold" id="avatar-fallback">T</div>
+        </div>
+        
+        <div class="space-y-4 flex-1">
+          <div>
+            <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-white" id="name">thekozugroup</h1>
+            <p class="text-xl text-slate-500 dark:text-slate-400" id="login">@thekozugroup</p>
+          </div>
+          
+          <p class="text-lg leading-relaxed max-w-2xl text-slate-700 dark:text-slate-300" id="bio">Loading...</p>
+
+          <div class="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400" id="meta">
+            <!-- Meta info injected here -->
+          </div>
+
+          <div class="flex gap-6 pt-2">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 dark:text-white" id="repo-count">0</span>
+              <span class="text-slate-500 dark:text-slate-400">Repositories</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 dark:text-white" id="followers">0</span>
+              <span class="text-slate-500 dark:text-slate-400">Followers</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 dark:text-white" id="following">0</span>
+              <span class="text-slate-500 dark:text-slate-400">Following</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column -->
+        <div class="space-y-8 lg:col-span-1">
+          
+          <!-- Language Stats -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title text-xl">Top Languages</div>
+              <div class="card-description">Based on public repository code</div>
+            </div>
+            <div class="card-content space-y-4" id="languages">
+              <!-- Languages injected here -->
+            </div>
+          </div>
+
+          <!-- Repo Stats -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title text-xl">Repository Stats</div>
+            </div>
+            <div class="card-content">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col items-center p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                  <svg class="w-5 h-5 mb-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                  <span class="text-2xl font-bold text-slate-900 dark:text-white" id="total-stars">0</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Total Stars</span>
+                </div>
+                <div class="flex flex-col items-center p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                  <svg class="w-5 h-5 mb-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                  <span class="text-2xl font-bold text-slate-900 dark:text-white" id="total-forks">0</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">Total Forks</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-8 lg:col-span-2">
+          
+          <!-- Recent Activity -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title text-xl flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                Recent Public Activity
+              </div>
+            </div>
+            <div class="card-content space-y-0" id="activity">
+              <!-- Activity injected here -->
+            </div>
+          </div>
+
+          <!-- Top Repos -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title text-xl flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                Top Repositories
+              </div>
+            </div>
+            <div class="card-content grid grid-cols-1 md:grid-cols-2 gap-4" id="repos">
+              <!-- Repos injected here -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
