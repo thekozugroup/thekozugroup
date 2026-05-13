@@ -190,19 +190,21 @@ function generateContributionGraph(data) {
     }
   });
 
-  // Legend — positioned at right edge of card content area
+  // Legend — centered within card content area
   const legendY = offsetY + graphHeight + 14;
-  const legendRightX = contentWidth;
-  const legendItemWidth = 10;
-  const legendGap = 3;
-  const legendTotalWidth = 30 + (levels.length * legendItemWidth) + ((levels.length - 1) * legendGap) + 4;
-  const legendX = legendRightX - legendTotalWidth;
+  const centerX = contentWidth / 2;
+  const squareSize = 8;
+  const squareGap = 2;
+  const squaresTotalWidth = levels.length * squareSize + (levels.length - 1) * squareGap;
+  const lessOffset = 45;  // distance from center to "Less" center point
+  const moreOffset = 45;  // distance from center to "More" center point
+  const squaresStartX = centerX - (squaresTotalWidth / 2);
   
-  let legend = `<text x="${legendX}" y="${legendY}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">Less</text>\n`;
+  let legend = `<text x="${centerX - lessOffset}" y="${legendY}" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">Less</text>\n`;
   levels.forEach((color, i) => {
-    legend += `<rect x="${legendX + 30 + i * (legendItemWidth + legendGap)}" y="${legendY - 8}" width="${legendItemWidth}" height="${legendItemWidth}" rx="2" fill="${color}"/>\n`;
+    legend += `<rect x="${squaresStartX + i * (squareSize + squareGap)}" y="${legendY - 8}" width="${squareSize}" height="${squareSize}" rx="2" fill="${color}"/>\n`;
   });
-  legend += `<text x="${legendX + 30 + levels.length * (legendItemWidth + legendGap)}" y="${legendY}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">More</text>\n`;
+  legend += `<text x="${centerX + moreOffset}" y="${legendY}" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">More</text>\n`;
 
   const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
 
