@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="480" height="148" xmlns="http://www.w3.org/2000/svg">
+<svg width="520" height="148" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="shadow-eev1w4sbri" x="-2%" y="-2%" width="108%" height="112%">
+    <filter id="shadow-jnxy4zbi28" x="-2%" y="-2%" width="108%" height="112%">
       <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.06"/>
     </filter>
   </defs>
-  <rect x="0" y="0" width="480" height="148" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-eev1w4sbri)"/>
-  <g transform="translate(24, 20)">
+  <rect x="0" y="0" width="520" height="148" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-jnxy4zbi28)"/>
+  <g transform="translate(28, 20)">
     <g transform="scale(0.9)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-6 8-6 13a6 6 0 0012 0c0-5-6-13-6-13z"/><path d="M12 22c0 0 4-4 4-8" stroke="#fbbf24"/></svg></g>
-    <text x="28" y="14" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#9ca3af" letter-spacing="0.08em" text-transform="uppercase">CONTRIBUTION STREAK</text>
+    <text x="28" y="14" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#9ca3af" letter-spacing="0.1em" text-transform="uppercase">CONTRIBUTION STREAK</text>
   </g>
-  <line x1="24" y1="48" x2="456" y2="48" stroke="#e5e7eb" stroke-width="1"/>
-  <g transform="translate(24, 56)">
+  <line x1="28" y1="48" x2="492" y2="48" stroke="#e5e7eb" stroke-width="1"/>
+  <g transform="translate(28, 56)">
     
-    <text x="72" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="700" fill="#111827">93</text>
-    <text x="72" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Total</text>
-    <text x="72" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Contributions</text>
+    <text x="77.33333333333333" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="700" fill="#111827">418</text>
+    <text x="77.33333333333333" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Total</text>
+    <text x="77.33333333333333" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Contributions</text>
 
-    <text x="216" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="700" fill="#2563eb">1</text>
-    <text x="216" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Current</text>
-    <text x="216" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Streak</text>
+    <text x="232" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="700" fill="#2563eb">3</text>
+    <text x="232" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Current</text>
+    <text x="232" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Streak</text>
 
-    <text x="360" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="700" fill="#111827">3</text>
-    <text x="360" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Longest</text>
-    <text x="360" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500" fill="#6b7280">Streak</text>
+    <text x="386.66666666666663" y="30" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="700" fill="#111827">6</text>
+    <text x="386.66666666666663" y="50" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Longest</text>
+    <text x="386.66666666666663" y="65" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="400" fill="#6b7280">Streak</text>
   
   </g>
 </svg>
