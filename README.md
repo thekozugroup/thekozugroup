@@ -1,31 +1,47 @@
-## Hi there, I'm thekozugroup 👋
-
----
-
-### 🔥 Contribution Streak
+## thekozugroup
 
 <p align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=thekozugroup&theme=default&hide_border=true&border_radius=6" alt="GitHub Streak" />
+  <b>Activity · Languages · Contributions</b>
 </p>
 
 ---
 
-### 📈 Contribution Activity
+### 🔥 Current Streak
 
 <p align="center">
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=thekozugroup&theme=github&hide_border=true&radius=6" alt="Contribution Graph" />
+  <img 
+    src="https://github-readme-streak-stats.herokuapp.com/?user=thekozugroup&theme=transparent&hide_border=true&border_radius=8&mode=weekly" 
+    alt="GitHub Streak Stats" 
+    width="480" 
+  />
 </p>
 
 ---
 
-### 💻 Language Distribution
+### 📈 Contribution Graph
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=thekozugroup&layout=compact&theme=default&hide_border=true&langs_count=8" alt="Top Languages" />
+  <img 
+    src="https://github-readme-activity-graph.vercel.app/graph?username=thekozugroup&theme=github-compact&hide_border=true&area=true" 
+    alt="GitHub Contribution Graph" 
+    width="720" 
+  />
 </p>
 
 ---
 
+### 💻 Most Used Languages
+
 <p align="center">
-  <i>Stats generated via github-readme-stats</i>
+  <img 
+    src="https://github-readme-stats.vercel.app/api/top-langs/?username=thekozugroup&layout=compact&theme=transparent&hide_border=true&border_radius=8&langs_count=10&card_width=480" 
+    alt="Top Languages" 
+    width="480" 
+  />
+</p>
+
+---
+
+<p align="center" style="color: #6b7280; font-size: 12px;">
+  <i>Stats auto-generated via github-readme-stats</i>
 </p>
