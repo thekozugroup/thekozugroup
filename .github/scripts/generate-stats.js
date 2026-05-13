@@ -3,9 +3,9 @@ const fs = require('fs');
 const USERNAME = process.env.GITHUB_USERNAME || 'thekozugroup';
 const TOKEN = process.env.GITHUB_TOKEN;
 
-const CARD_WIDTH = 480;
+const CARD_WIDTH = 520;
 const CARD_RADIUS = 12;
-const CARD_PADDING = 24;
+const CARD_PADDING = 28;
 const CARD_BG = '#ffffff';
 const CARD_BORDER = '#e5e7eb';
 const TEXT_PRIMARY = '#111827';
@@ -13,6 +13,16 @@ const TEXT_SECONDARY = '#6b7280';
 const TEXT_MUTED = '#9ca3af';
 const ACCENT = '#2563eb';
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+
+// Unified type scale
+const TYPE = {
+  header:    { size: 11, weight: 600, fill: TEXT_MUTED, spacing: '0.1em' },
+  display:   { size: 32, weight: 700, fill: TEXT_PRIMARY },
+  displayAccent: { size: 32, weight: 700, fill: ACCENT },
+  label:     { size: 13, weight: 500, fill: TEXT_PRIMARY },
+  caption:   { size: 11, weight: 400, fill: TEXT_SECONDARY },
+  micro:     { size: 10, weight: 400, fill: TEXT_MUTED },
+};
 
 async function queryGitHubGraphQL(query) {
   const res = await fetch('https://api.github.com/graphql', {
@@ -54,7 +64,7 @@ function cardShell(title, iconSvg, content, height) {
   <rect x="0" y="0" width="${w}" height="${height}" rx="${r}" fill="${CARD_BG}" stroke="${CARD_BORDER}" stroke-width="1" filter="url(#${shadowId})"/>
   <g transform="translate(${CARD_PADDING}, 20)">
     <g transform="scale(0.9)">${iconSvg}</g>
-    <text x="28" y="14" font-family="${FONT}" font-size="12" font-weight="600" fill="${TEXT_MUTED}" letter-spacing="0.08em" text-transform="uppercase">${title.toUpperCase()}</text>
+    <text x="28" y="14" font-family="${FONT}" font-size="${TYPE.header.size}" font-weight="${TYPE.header.weight}" fill="${TYPE.header.fill}" letter-spacing="${TYPE.header.spacing}" text-transform="uppercase">${title.toUpperCase()}</text>
   </g>
   <line x1="${CARD_PADDING}" y1="48" x2="${w - CARD_PADDING}" y2="48" stroke="${CARD_BORDER}" stroke-width="1"/>
   <g transform="translate(${CARD_PADDING}, 56)">
@@ -100,17 +110,17 @@ function generateStreakCard(data) {
   const colWidth = (CARD_WIDTH - CARD_PADDING * 2) / 3;
 
   const content = `
-    <text x="${col1X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="28" font-weight="700" fill="${TEXT_PRIMARY}">${total}</text>
-    <text x="${col1X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Total</text>
-    <text x="${col1X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Contributions</text>
+    <text x="${col1X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.display.weight}" fill="${TYPE.display.fill}">${total}</text>
+    <text x="${col1X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Total</text>
+    <text x="${col1X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Contributions</text>
 
-    <text x="${col2X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="28" font-weight="700" fill="${ACCENT}">${currentStreak}</text>
-    <text x="${col2X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Current</text>
-    <text x="${col2X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Streak</text>
+    <text x="${col2X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.displayAccent.weight}" fill="${TYPE.displayAccent.fill}">${currentStreak}</text>
+    <text x="${col2X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Current</text>
+    <text x="${col2X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Streak</text>
 
-    <text x="${col3X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="28" font-weight="700" fill="${TEXT_PRIMARY}">${longestStreak}</text>
-    <text x="${col3X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Longest</text>
-    <text x="${col3X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="11" font-weight="500" fill="${TEXT_SECONDARY}">Streak</text>
+    <text x="${col3X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.display.weight}" fill="${TYPE.display.fill}">${longestStreak}</text>
+    <text x="${col3X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Longest</text>
+    <text x="${col3X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Streak</text>
   `;
 
   const svg = cardShell('Contribution Streak', icon, content, 148);
@@ -170,13 +180,13 @@ function generateContributionGraph(data) {
 
   let labels = '';
   monthLabels.forEach(m => {
-    labels += `<text x="${m.x}" y="${offsetY - 4}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">${m.label}</text>\n`;
+    labels += `<text x="${m.x}" y="${offsetY - 4}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">${m.label}</text>\n`;
   });
 
   const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
   dayLabels.forEach((label, i) => {
     if (label) {
-      labels += `<text x="${offsetX - 6}" y="${offsetY + i * weekStride + 5}" text-anchor="end" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">${label}</text>\n`;
+      labels += `<text x="${offsetX - 6}" y="${offsetY + i * weekStride + 5}" text-anchor="end" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">${label}</text>\n`;
     }
   });
 
@@ -188,11 +198,11 @@ function generateContributionGraph(data) {
   const legendTotalWidth = 30 + (levels.length * legendItemWidth) + ((levels.length - 1) * legendGap) + 4;
   const legendX = legendRightX - legendTotalWidth;
   
-  let legend = `<text x="${legendX}" y="${legendY}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">Less</text>\n`;
+  let legend = `<text x="${legendX}" y="${legendY}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">Less</text>\n`;
   levels.forEach((color, i) => {
     legend += `<rect x="${legendX + 30 + i * (legendItemWidth + legendGap)}" y="${legendY - 8}" width="${legendItemWidth}" height="${legendItemWidth}" rx="2" fill="${color}"/>\n`;
   });
-  legend += `<text x="${legendX + 30 + levels.length * (legendItemWidth + legendGap)}" y="${legendY}" font-family="${FONT}" font-size="9" fill="${TEXT_MUTED}">More</text>\n`;
+  legend += `<text x="${legendX + 30 + levels.length * (legendItemWidth + legendGap)}" y="${legendY}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">More</text>\n`;
 
   const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
 
@@ -281,11 +291,13 @@ async function generateLanguageCard(sortedLangs) {
     const barMaxWidth = (CARD_WIDTH - CARD_PADDING * 2) - labelWidth - 50;
     const barWidth = Math.max((parseFloat(lang.percent) / 100) * barMaxWidth, 4); // Min 4px so tiny bars still visible
     
+    const nameColor = TYPE.label.fill;
+    const pctColor = TYPE.caption.fill;
     langContent += `  <circle cx="6" cy="${y + barHeight/2}" r="5" fill="${lang.color}"/>
-  <text x="20" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="13" font-weight="500" fill="${TEXT_PRIMARY}">${lang.name}</text>
+  <text x="20" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="${TYPE.label.size}" font-weight="${TYPE.label.weight}" fill="${nameColor}">${lang.name}</text>
   <rect x="${labelWidth}" y="${y + 3}" width="${barMaxWidth}" height="${barHeight - 6}" rx="4" fill="#f3f4f6"/>
   <rect x="${labelWidth}" y="${y + 3}" width="${barWidth}" height="${barHeight - 6}" rx="4" fill="${lang.color}" opacity="0.85"/>
-  <text x="${labelWidth + barMaxWidth + 10}" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="12" fill="${TEXT_SECONDARY}">${lang.percent}%</text>
+  <text x="${labelWidth + barMaxWidth + 10}" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="${TYPE.caption.size}" fill="${pctColor}">${lang.percent}%</text>
 `;
   });
 
