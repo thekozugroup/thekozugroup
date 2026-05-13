@@ -7,8 +7,10 @@ async function fetchGitHub(endpoint) {
   const url = `https://api.github.com/${endpoint}`;
   const headers = {
     Accept: 'application/vnd.github.v3+json',
-    Authorization: `token ${TOKEN}`,
   };
+  if (TOKEN) {
+    headers.Authorization = `token ${TOKEN}`;
+  }
 
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`GitHub API error: ${res.status} on ${endpoint}`);
@@ -39,7 +41,7 @@ async function generateLanguages(repos) {
     ownRepos.map(async (repo) => {
       try {
         const res = await fetch(repo.languages_url, {
-          headers: { Authorization: `token ${TOKEN}`, Accept: 'application/vnd.github.v3+json' }
+          headers: TOKEN ? { Authorization: `token ${TOKEN}`, Accept: 'application/vnd.github.v3+json' } : { Accept: 'application/vnd.github.v3+json' }
         });
         return res.ok ? res.json() : {};
       } catch {

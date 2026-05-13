@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="480" height="328" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg { fill: transparent; }
+    .label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; fill: #374151; font-weight: 500; }
+    .percent { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; fill: #6b7280; }
+    .bar-bg { fill: #e5e7eb; rx: 4; }
+    .bar { rx: 4; }
+  </style>
+  <rect class="bg" width="100%" height="100%"/>
+  <text x="0" y="20" class="label" style="font-size: 16px; font-weight: 600; fill: #111827;">Most Used Languages</text>
+  <circle cx="6" cy="52" r="5" fill="#3572A5"/>
+  <text x="18" y="56" class="label">Python</text>
+  <rect x="100" y="40" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="40" width="165.99" height="24" class="bar" fill="#3572A5" opacity="0.85"/>
+  <text x="440" y="56" class="percent">50.3%</text>
+  <circle cx="6" cy="88" r="5" fill="#dea584"/>
+  <text x="18" y="92" class="label">Rust</text>
+  <rect x="100" y="76" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="76" width="89.10000000000001" height="24" class="bar" fill="#dea584" opacity="0.85"/>
+  <text x="440" y="92" class="percent">27.0%</text>
+  <circle cx="6" cy="124" r="5" fill="#3178c6"/>
+  <text x="18" y="128" class="label">TypeScript</text>
+  <rect x="100" y="112" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="112" width="50.49" height="24" class="bar" fill="#3178c6" opacity="0.85"/>
+  <text x="440" y="128" class="percent">15.3%</text>
+  <circle cx="6" cy="160" r="5" fill="#A97BFF"/>
+  <text x="18" y="164" class="label">Kotlin</text>
+  <rect x="100" y="148" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="148" width="18.479999999999997" height="24" class="bar" fill="#A97BFF" opacity="0.85"/>
+  <text x="440" y="164" class="percent">5.6%</text>
+  <circle cx="6" cy="196" r="5" fill="#89e051"/>
+  <text x="18" y="200" class="label">Shell</text>
+  <rect x="100" y="184" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="184" width="2.3099999999999996" height="24" class="bar" fill="#89e051" opacity="0.85"/>
+  <text x="440" y="200" class="percent">0.7%</text>
+  <circle cx="6" cy="232" r="5" fill="#563d7c"/>
+  <text x="18" y="236" class="label">CSS</text>
+  <rect x="100" y="220" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="220" width="0.99" height="24" class="bar" fill="#563d7c" opacity="0.85"/>
+  <text x="440" y="236" class="percent">0.3%</text>
+  <circle cx="6" cy="268" r="5" fill="#6e7681"/>
+  <text x="18" y="272" class="label">Jinja</text>
+  <rect x="100" y="256" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="256" width="0.99" height="24" class="bar" fill="#6e7681" opacity="0.85"/>
+  <text x="440" y="272" class="percent">0.3%</text>
+  <circle cx="6" cy="304" r="5" fill="#384d54"/>
+  <text x="18" y="308" class="label">Dockerfile</text>
+  <rect x="100" y="292" width="330" height="24" class="bar-bg"/>
+  <rect x="100" y="292" width="0.66" height="24" class="bar" fill="#384d54" opacity="0.85"/>
+  <text x="440" y="308" class="percent">0.2%</text>
+</svg>
