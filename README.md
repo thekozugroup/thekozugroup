@@ -21,7 +21,7 @@
 ### 💻 Language Distribution
 
 <p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=thekozugroup&layout=donut&theme=default&hide_border=true&border_radius=6&langs_count=10&hide_title=true" alt="Language Distribution" width="420" />
+  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=thekozugroup&layout=compact&theme=default&hide_border=true&langs_count=8" alt="Top Languages" />
 </p>
 
 ---
