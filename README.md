@@ -4,26 +4,20 @@
 
 ---
 
-### 🔥 Current Streak
-
 <p align="center">
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=thekozugroup&theme=default&hide_border=true&border_radius=6" alt="GitHub Streak" />
+  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/streak.svg" alt="Contribution Streak" width="480" />
 </p>
 
 ---
 
-### 📈 Contribution Graph
-
 <p align="center">
-  <img src="https://github-readme-activity-graph.vercel.app/graph?username=thekozugroup&theme=github&hide_border=true&radius=6" alt="Contribution Graph" />
+  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/contributions.svg" alt="Contribution Activity" width="480" />
 </p>
 
 ---
 
-### 💻 Most Used Languages
-
 <p align="center">
-  <img src="stats/languages.svg" alt="Most Used Languages" width="480" />
+  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/languages.svg" alt="Most Used Languages" width="480" />
 </p>
 
 ---
