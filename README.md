@@ -1,17 +1,30 @@
-## thekozugroup
-
 <p align="center"><b>Activity · Languages · Contributions</b></p>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/streak.svg?v=2" alt="Contribution Streak" width="520" />
-</p>
+<p align="center"><!-- github_stats starts -->0 followers · 0 stars · 0 forks · 0 repos<!-- github_stats ends --></p>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/contributions.svg?v=2" alt="Contribution Activity" width="520" />
-</p>
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td width="50%" valign="top">
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/thekozugroup/thekozugroup/main/stats/languages.svg?v=2" alt="Most Used Languages" width="520" />
-</p>
+**Languages**
+
+<!-- languages starts -->
+• Loading...
+<!-- languages ends -->
+
+</td>
+<td width="50%" valign="top">
+
+**Recent Releases**
+
+<!-- recent_releases starts -->
+• Loading...
+<!-- recent_releases ends -->
+
+</td>
+</tr>
+</table>
+
+---
 
 <p align="center"><i>Stats auto-generated via GitHub Actions · Updated every 6 hours</i></p>
