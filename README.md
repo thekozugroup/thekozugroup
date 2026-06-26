@@ -9,12 +9,12 @@
 **Languages**
 
 <!-- languages starts -->
-• **Python** — 49.5%
-• **Rust** — 26.8%
-• **TypeScript** — 14.8%
-• **Kotlin** — 6.4%
+• **Python** — 49.3%
+• **Rust** — 26.7%
+• **TypeScript** — 14.7%
+• **Kotlin** — 6.6%
+• **Swift** — 1.0%
 • **Shell** — 0.8%
-• **Swift** — 0.8%
 <!-- languages ends -->
 
 </td>
