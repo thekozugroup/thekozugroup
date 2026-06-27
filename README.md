@@ -13,7 +13,7 @@
 • **Rust** — 26.6%
 • **TypeScript** — 14.7%
 • **Kotlin** — 6.8%
-• **Swift** — 1.0%
+• **Swift** — 1.1%
 • **Shell** — 0.8%
 <!-- languages ends -->
 
