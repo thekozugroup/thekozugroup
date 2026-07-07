@@ -1,6 +1,6 @@
 <p align="center"><b>Activity · Languages · Contributions</b></p>
 
-<p align="center"><!-- github_stats starts -->1 followers · 1 stars · 0 forks · 34 repos<!-- github_stats ends --></p>
+<p align="center"><!-- github_stats starts -->1 followers · 2 stars · 0 forks · 34 repos<!-- github_stats ends --></p>
 
 <table width="100%" cellspacing="0" cellpadding="0">
 <tr>
