@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="520" height="216" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="shadow-jny93rumrfa" x="-2%" y="-2%" width="108%" height="112%">
+    <filter id="shadow-avuj3utrnsw" x="-2%" y="-2%" width="108%" height="112%">
       <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.06"/>
     </filter>
   </defs>
-  <rect x="0" y="0" width="520" height="216" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-jny93rumrfa)"/>
+  <rect x="0" y="0" width="520" height="216" rx="12" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" filter="url(#shadow-avuj3utrnsw)"/>
   <g transform="translate(28, 20)">
     <g transform="scale(0.9)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></g>
     <text x="28" y="14" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="600" fill="#9ca3af" letter-spacing="0.1em" text-transform="uppercase">MOST USED LANGUAGES</text>
