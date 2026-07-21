@@ -1,10 +1,25 @@
-<p align="center"><b>Activity · Languages · Contributions</b></p>
+<div align="center">
+
+<img alt="The Kozu Group — building in the open. Read it. Fork it. Ship it." src="stats/header.svg" width="900">
+
+<br><br>
+
+<img alt="Most-used languages and contribution activity." src="stats/row.svg" width="900">
+
+<br><br>
+
+<img alt="Total contributions, current and longest streak, and weekly activity." src="stats/streak.svg" width="900">
+
+</div>
+
+<!--
+  Plain-text mirror of the stat cards above.
+  Kept in sync by build_readme.py and readable when images don't load.
+-->
+<details>
+<summary>Plain-text stats</summary>
 
 <p align="center"><!-- github_stats starts -->2 followers · 23 stars · 7 forks · 33 repos<!-- github_stats ends --></p>
-
-<table width="100%" cellspacing="0" cellpadding="0">
-<tr>
-<td width="50%" valign="top">
 
 **Languages**
 
@@ -17,19 +32,12 @@
 • **Shell** — 0.6%
 <!-- languages ends -->
 
-</td>
-<td width="50%" valign="top">
-
 **Recent Releases**
 
 <!-- recent_releases starts -->
 • No recent releases
 <!-- recent_releases ends -->
 
-</td>
-</tr>
-</table>
+</details>
 
----
-
-<p align="center"><i>Stats auto-generated via GitHub Actions · Updated every 6 hours</i></p>
+<p align="center"><sub>Monochrome stat cards, generated on GitHub Actions and refreshed every six hours. The whole thing lives on GitHub — read it, fork it, self-host it.</sub></p>

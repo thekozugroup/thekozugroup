@@ -34,6 +34,7 @@ const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial
 const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,'DejaVu Sans Mono',monospace";
 
 const PAD = 28;
+const H_HALF = 280; // shared height for the two side-by-side data cards
 
 // ─── 5×7 pixel digit font (retro score-counter numerals) ────────────────────
 const FONT5x7 = {
@@ -126,11 +127,21 @@ const ANIM_CSS = `
   .sparkfill{animation:fade 1.8s ease-out both;}
   @media (prefers-reduced-motion:reduce){*{animation:none!important}}`;
 
-function svgOpen(w, h, extraStyle = '') {
+// Open an SVG document (no card frame drawn — callers add cardRect/panels).
+function svgHead(w, h, extraStyle = '') {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img">
-<style>${ANIM_CSS}${extraStyle}</style>
-<rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
+<style>${ANIM_CSS}${extraStyle}</style>`;
+}
+
+// A flat white card with a hairline border and sharp square corners.
+function cardRect(x, y, w, h) {
+  return `<rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${h - 1}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
+}
+
+// Single-card document (frame + open) for a full card at the origin.
+function svgOpen(w, h, extraStyle = '') {
+  return svgHead(w, h, extraStyle) + cardRect(0, 0, w, h);
 }
 
 // Standard card header: mono eyebrow "NN / TITLE" + hairline divider.
@@ -208,15 +219,14 @@ function renderHeader(summary) {
   return s;
 }
 
-// ─── Languages card ─────────────────────────────────────────────────────────
-function renderLanguages(langs) {
-  const w = 440;
+// ─── Languages panel (composable) ───────────────────────────────────────────
+function langPanel(w, h, langs) {
   const filtered = langs.filter((l) => parseFloat(l.percent) >= 1.0).slice(0, 6);
   const rowH = 34;
-  const top = PAD + 40;
-  const h = top + filtered.length * rowH + 14;
-  let s = svgOpen(w, h);
-  s += cardHeader(w, '02', 'LANGUAGES');
+  const headerBottom = PAD + 40;
+  // vertically centre the rows in the space below the header
+  const top = headerBottom + Math.max(0, (h - headerBottom - filtered.length * rowH - 8) / 2);
+  let s = cardRect(0, 0, w, h) + cardHeader(w, '02', 'LANGUAGES');
 
   const barX = 138;
   const barMax = w - PAD - barX - 44;
@@ -235,14 +245,11 @@ function renderLanguages(langs) {
     s += `<rect class="bar" x="${barX}" y="${cy - 5}" width="${bw.toFixed(1)}" height="10" rx="1" fill="${shade}" style="animation-delay:${(i * 0.09).toFixed(2)}s"/>`;
     s += `<text class="mono" x="${w - PAD}" y="${cy + 4}" font-size="12" fill="${GRAY_MID}" text-anchor="end">${lang.percent}%</text>`;
   });
-
-  s += `</svg>`;
   return s;
 }
 
-// ─── Contribution activity card (monochrome heatmap) ────────────────────────
-function renderContributions(weeks, totalContributions) {
-  const w = 440;
+// ─── Contribution activity panel (composable, monochrome heatmap) ────────────
+function activityPanel(w, h, weeks, totalContributions) {
   const cell = 8;
   const gap = 2;
   const stride = cell + gap;
@@ -253,13 +260,13 @@ function renderContributions(weeks, totalContributions) {
   const weeksFit = Math.floor(graphMaxW / stride);
   const shown = weeks.slice(Math.max(0, weeks.length - weeksFit));
 
-  const top = PAD + 40;
-  const graphY = top + labelTop;
   const graphH = 7 * stride;
+  const blockH = labelTop + graphH + 20 + 8; // month labels + grid + legend
+  const headerBottom = PAD + 40;
+  const blockTop = headerBottom + Math.max(0, (h - headerBottom - blockH) / 2);
+  const graphY = blockTop + labelTop;
   const legendY = graphY + graphH + 20;
-  const h = legendY + 14;
-  let s = svgOpen(w, h);
-  s += cardHeader(w, '03', 'ACTIVITY');
+  let s = cardRect(0, 0, w, h) + cardHeader(w, '03', 'ACTIVITY');
 
   // total caption (right-aligned in header row)
   s += `<text class="mono" x="${w - PAD}" y="${PAD + 4}" font-size="11" letter-spacing="1" fill="${GRAY_LIGHT}" text-anchor="end">${totalContributions} / YEAR</text>`;
@@ -309,9 +316,28 @@ function renderContributions(weeks, totalContributions) {
   });
   legend += `<text class="mono" x="${cx + legTotal + 8}" y="${legendY + sq - 1}" font-size="9" fill="${GRAY_LIGHT}">MORE</text>`;
 
-  s += labels + cells + legend;
-  s += `</svg>`;
-  return s;
+  return s + labels + cells + legend;
+}
+
+// Standalone single cards (kept for reuse / direct embedding).
+function renderLanguages(langs) {
+  const w = 440;
+  return svgHead(w, H_HALF) + langPanel(w, H_HALF, langs) + `</svg>`;
+}
+function renderContributions(weeks, totalContributions) {
+  const w = 440;
+  return svgHead(w, H_HALF) + activityPanel(w, H_HALF, weeks, totalContributions) + `</svg>`;
+}
+
+// Combined "row": languages + activity side by side in one scalable image.
+function renderRow(langs, weeks, totalContributions) {
+  const panelW = 430;
+  const gap = 40;
+  const w = panelW * 2 + gap;
+  let s = svgHead(w, H_HALF);
+  s += `<g transform="translate(0,0)">${langPanel(panelW, H_HALF, langs)}</g>`;
+  s += `<g transform="translate(${panelW + gap},0)">${activityPanel(panelW, H_HALF, weeks, totalContributions)}</g>`;
+  return s + `</svg>`;
 }
 
 // ─── Streak / overview card (pixel numbers + sparkline) ──────────────────────
@@ -486,8 +512,7 @@ async function fetchData() {
 function writeCards(data) {
   fs.mkdirSync('stats', { recursive: true });
   fs.writeFileSync('stats/header.svg', renderHeader(data.summary));
-  fs.writeFileSync('stats/languages.svg', renderLanguages(data.langs));
-  fs.writeFileSync('stats/contributions.svg', renderContributions(data.weeks, data.totalContributions));
+  fs.writeFileSync('stats/row.svg', renderRow(data.langs, data.weeks, data.totalContributions));
   fs.writeFileSync('stats/streak.svg', renderStreak(data.streak, data.weeks));
 }
 
@@ -506,6 +531,7 @@ module.exports = {
   renderHeader,
   renderLanguages,
   renderContributions,
+  renderRow,
   renderStreak,
   computeStreak,
   writeCards,
