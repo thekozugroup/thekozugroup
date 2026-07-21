@@ -77,43 +77,33 @@ function pixelWidth(text, cell) {
   return w - cell;
 }
 
-// ─── Pixel-art ghost mascot (sole brand mark) ───────────────────────────────
-const GHOST = [
-  '000111111000',
-  '001111111100',
-  '011111111110',
-  '011111111110',
-  '111111111111',
-  '111111111111',
-  '111111111111',
-  '111111111111',
-  '111111111111',
-  '111111111111',
-  '110110110110',
-];
+// ─── Kozu brand mark (the "K" monogram, sole brand mark) ────────────────────
+// Native artwork is authored on a 500×500 grid; bounding box is x[129.47,370.52]
+// y[0,500] — tall and narrow (≈241×500). We centre + scale it into the header.
+const LOGO_PATH =
+  'M129.47,0v500h64.28v-128.05c0-11.45,13.85-17.19,21.95-9.09l109.37,109.37,45.45-45.45-167.69-167.69c-5.02-5.02-5.02-13.16,0-18.18l167.69-167.69-45.45-45.45-109.37,109.37c-8.1,8.1-21.95,2.36-21.95-9.09V0h-64.28Z';
+const LOGO_BBOX = { x: 129.47, y: 0, w: 241.05, h: 500 };
 
-function ghostMascot(x, y, P) {
-  let body = '';
-  for (let r = 0; r < GHOST.length; r++) {
-    for (let c = 0; c < 12; c++) {
-      if (GHOST[r][c] === '1') body += `<rect x="${x + c * P}" y="${y + r * P}" width="${P}" height="${P}"/>`;
-    }
-  }
-  const eye = (ec, er) => `<rect x="${x + ec * P}" y="${y + er * P}" width="${2 * P}" height="${2 * P}" fill="${SURFACE}"/>`;
-  const pupil = (pc, pr) => `<rect x="${x + pc * P}" y="${y + pr * P}" width="${P}" height="${P}" fill="${INK}"/>`;
-  const w = 12 * P;
-  const h = 11 * P;
-  const shadow = `<ellipse class="gshadow" cx="${x + w / 2}" cy="${y + h + P * 1.6}" rx="${w * 0.42}" ry="${P * 1.4}" fill="${INK}" opacity="0.12"/>`;
-  const ghost = `<g class="ghost" fill="${INK}">${body}${eye(2, 3)}${eye(8, 3)}${pupil(3, 4)}${pupil(8, 4)}</g>`;
-  return shadow + ghost;
+function logoMark(centerX, centerY, targetH) {
+  const scale = targetH / LOGO_BBOX.h;
+  const bw = LOGO_BBOX.w * scale;
+  const bh = LOGO_BBOX.h * scale;
+  const left = centerX - bw / 2;
+  const top = centerY - bh / 2;
+  const tx = left - LOGO_BBOX.x * scale;
+  const shadow = `<ellipse class="mshadow" cx="${centerX}" cy="${(top + bh + 9).toFixed(2)}" rx="${(bw * 0.62).toFixed(2)}" ry="${(targetH * 0.055).toFixed(2)}" fill="${INK}" opacity="0.12"/>`;
+  // Outer group carries the float animation (CSS transform); inner group carries
+  // the static translate/scale so the two transforms don't collide.
+  const mark = `<g class="mark"><g transform="translate(${tx.toFixed(2)},${top.toFixed(2)}) scale(${scale.toFixed(4)})"><path d="${LOGO_PATH}" fill="${INK}"/></g></g>`;
+  return shadow + mark;
 }
 
 // ─── Shared animation CSS ───────────────────────────────────────────────────
 const ANIM_CSS = `
   text{font-family:${SANS};}
   .mono{font-family:${MONO};}
-  .ghost{transform-box:fill-box;transform-origin:center;animation:bob 3s ease-in-out infinite;}
-  .gshadow{transform-box:fill-box;transform-origin:center;animation:shadowpulse 3s ease-in-out infinite;}
+  .mark{transform-box:fill-box;transform-origin:center;animation:bob 3s ease-in-out infinite;}
+  .mshadow{transform-box:fill-box;transform-origin:center;animation:shadowpulse 3s ease-in-out infinite;}
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   @keyframes shadowpulse{0%,100%{transform:scaleX(1);opacity:.12}50%{transform:scaleX(.72);opacity:.06}}
   .bar{transform-box:fill-box;transform-origin:left center;animation:grow .9s cubic-bezier(.4,0,.2,1) both;}
@@ -183,14 +173,13 @@ function renderHeader(summary) {
   const h = 232;
   let s = svgOpen(w, h);
 
-  // Ghost mascot, left.
-  const P = 5;
-  const gx = 44;
-  const gy = 44;
-  s += ghostMascot(gx, gy, P);
+  // Brand mark (the floating Kozu "K"), left.
+  const markCenterX = 76;
+  const markCenterY = 72;
+  s += logoMark(markCenterX, markCenterY, 84);
 
   // Wordmark + tagline.
-  const tx = gx + 12 * P + 40;
+  const tx = 150;
   s += `<text class="mono" x="${tx}" y="78" font-size="34" font-weight="600" letter-spacing="1.5" fill="${INK}">THE KOZU GROUP</text>`;
   s += `<text x="${tx + 2}" y="104" font-size="14.5" fill="${GRAY_MID}">Building in the open. Read it. Fork it. Ship it.</text>`;
 
