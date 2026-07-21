@@ -1,6 +1,6 @@
 <p align="center"><b>Activity · Languages · Contributions</b></p>
 
-<p align="center"><!-- github_stats starts -->2 followers · 24 stars · 7 forks · 34 repos<!-- github_stats ends --></p>
+<p align="center"><!-- github_stats starts -->2 followers · 23 stars · 7 forks · 33 repos<!-- github_stats ends --></p>
 
 <table width="100%" cellspacing="0" cellpadding="0">
 <tr>
@@ -9,12 +9,12 @@
 **Languages**
 
 <!-- languages starts -->
-• **Python** — 49.1%
-• **Rust** — 26.6%
-• **TypeScript** — 14.7%
-• **Kotlin** — 6.8%
-• **Swift** — 1.1%
-• **Shell** — 0.8%
+• **Python** — 47.0%
+• **Rust** — 29.3%
+• **TypeScript** — 13.4%
+• **Kotlin** — 7.5%
+• **Swift** — 1.3%
+• **Shell** — 0.6%
 <!-- languages ends -->
 
 </td>
