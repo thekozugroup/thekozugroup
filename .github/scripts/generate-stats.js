@@ -1,36 +1,419 @@
+/**
+ * Ghost — profile stat cards for thekozugroup.
+ *
+ * A monochrome, editorial, retro-gaming stat system rendered as self-contained
+ * animated SVG. Follows the Ghost design language: pure-white canvas, near-black
+ * ink, a four-step neutral-gray ramp, hairline borders, sharp square content vs.
+ * rounded pill chrome, a pixel-art ghost mascot as the sole brand mark, and one
+ * ambient animation (the mascot bob). Color comes only from data — the chrome is
+ * strictly monochrome. Motion is CSS-only and settles under prefers-reduced-motion.
+ *
+ * Render functions are pure (data in, SVG string out) and exported so the same
+ * code path can render live (in CI, with a token) or from a snapshot.
+ */
 const fs = require('fs');
 
 const USERNAME = process.env.GITHUB_USERNAME || 'thekozugroup';
 const TOKEN = process.env.GITHUB_TOKEN;
 
-const CARD_WIDTH = 520;
-const CARD_RADIUS = 12;
-const CARD_PADDING = 28;
-const CARD_BG = '#ffffff';
-const CARD_BORDER = '#e5e7eb';
-const TEXT_PRIMARY = '#111827';
-const TEXT_SECONDARY = '#6b7280';
-const TEXT_MUTED = '#9ca3af';
-const ACCENT = '#2563eb';
-const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+// ─── Ghost design tokens ───────────────────────────────────────────────────
+const SURFACE = '#ffffff'; // canvas
+const INK = '#111111'; // on-surface — headings / primary
+const CHARCOAL = '#2a2a2a'; // neutral-90
+const GRAY_DARK = '#333333'; // neutral-70
+const GRAY_MID = '#555555'; // neutral-50 — body
+const GRAY_LIGHT = '#777777'; // neutral-40 — muted / captions
+const BORDER = '#dddddd'; // neutral-20 — hairline
+const STONE = '#f7f4ef'; // warm off-white accent (sparingly)
 
-// Unified type scale
-const TYPE = {
-  header:    { size: 11, weight: 600, fill: TEXT_MUTED, spacing: '0.1em' },
-  display:   { size: 32, weight: 700, fill: TEXT_PRIMARY },
-  displayAccent: { size: 32, weight: 700, fill: ACCENT },
-  label:     { size: 13, weight: 500, fill: TEXT_PRIMARY },
-  caption:   { size: 11, weight: 400, fill: TEXT_SECONDARY },
-  micro:     { size: 10, weight: 400, fill: TEXT_MUTED },
+// Monochrome data ramps (data carries the only "color").
+const BAR_RAMP = ['#161616', '#2a2a2a', '#3d3d3d', '#565656', '#6f6f6f', '#8a8a8a', '#a3a3a3', '#bdbdbd'];
+const HEAT_RAMP = ['#ededed', '#c6c6c6', '#8f8f8f', '#4d4d4d', '#161616'];
+
+const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,'DejaVu Sans Mono',monospace";
+
+const PAD = 28;
+
+// ─── 5×7 pixel digit font (retro score-counter numerals) ────────────────────
+const FONT5x7 = {
+  '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+  '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+  '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+  '3': ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
+  '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+  '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+  '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+  '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+  '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+  '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
 };
 
-async function queryGitHubGraphQL(query) {
+function pixelDigits(text, x, y, cell, color, cls) {
+  let out = '';
+  let cx = x;
+  for (const ch of String(text)) {
+    if (ch === ' ') { cx += cell * 3; continue; }
+    const glyph = FONT5x7[ch];
+    if (!glyph) { cx += cell * 6; continue; }
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 5; c++) {
+        if (glyph[r][c] === '1') {
+          out += `<rect x="${(cx + c * cell).toFixed(1)}" y="${(y + r * cell).toFixed(1)}" width="${cell}" height="${cell}"/>`;
+        }
+      }
+    }
+    cx += cell * 6; // 5 wide + 1 gap
+  }
+  const width = cx - x - cell;
+  const g = `<g class="${cls || ''}" fill="${color}">${out}</g>`;
+  return { svg: g, width };
+}
+
+function pixelWidth(text, cell) {
+  let w = 0;
+  for (const ch of String(text)) w += ch === ' ' ? cell * 3 : cell * 6;
+  return w - cell;
+}
+
+// ─── Pixel-art ghost mascot (sole brand mark) ───────────────────────────────
+const GHOST = [
+  '000111111000',
+  '001111111100',
+  '011111111110',
+  '011111111110',
+  '111111111111',
+  '111111111111',
+  '111111111111',
+  '111111111111',
+  '111111111111',
+  '111111111111',
+  '110110110110',
+];
+
+function ghostMascot(x, y, P) {
+  let body = '';
+  for (let r = 0; r < GHOST.length; r++) {
+    for (let c = 0; c < 12; c++) {
+      if (GHOST[r][c] === '1') body += `<rect x="${x + c * P}" y="${y + r * P}" width="${P}" height="${P}"/>`;
+    }
+  }
+  const eye = (ec, er) => `<rect x="${x + ec * P}" y="${y + er * P}" width="${2 * P}" height="${2 * P}" fill="${SURFACE}"/>`;
+  const pupil = (pc, pr) => `<rect x="${x + pc * P}" y="${y + pr * P}" width="${P}" height="${P}" fill="${INK}"/>`;
+  const w = 12 * P;
+  const h = 11 * P;
+  const shadow = `<ellipse class="gshadow" cx="${x + w / 2}" cy="${y + h + P * 1.6}" rx="${w * 0.42}" ry="${P * 1.4}" fill="${INK}" opacity="0.12"/>`;
+  const ghost = `<g class="ghost" fill="${INK}">${body}${eye(2, 3)}${eye(8, 3)}${pupil(3, 4)}${pupil(8, 4)}</g>`;
+  return shadow + ghost;
+}
+
+// ─── Shared animation CSS ───────────────────────────────────────────────────
+const ANIM_CSS = `
+  text{font-family:${SANS};}
+  .mono{font-family:${MONO};}
+  .ghost{transform-box:fill-box;transform-origin:center;animation:bob 3s ease-in-out infinite;}
+  .gshadow{transform-box:fill-box;transform-origin:center;animation:shadowpulse 3s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes shadowpulse{0%,100%{transform:scaleX(1);opacity:.12}50%{transform:scaleX(.72);opacity:.06}}
+  .bar{transform-box:fill-box;transform-origin:left center;animation:grow .9s cubic-bezier(.4,0,.2,1) both;}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .cell{animation:fade .5s ease-out both;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .pix{transform-box:fill-box;transform-origin:center;animation:pop .5s ease-out both;}
+  @keyframes pop{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+  .spark{stroke-dasharray:1600;stroke-dashoffset:0;animation:draw 1.8s ease-out both;}
+  @keyframes draw{from{stroke-dashoffset:1600}to{stroke-dashoffset:0}}
+  .sparkfill{animation:fade 1.8s ease-out both;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}`;
+
+function svgOpen(w, h, extraStyle = '') {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img">
+<style>${ANIM_CSS}${extraStyle}</style>
+<rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
+}
+
+// Standard card header: mono eyebrow "NN / TITLE" + hairline divider.
+function cardHeader(w, index, title) {
+  return `<text class="mono" x="${PAD}" y="${PAD + 4}" font-size="12" letter-spacing="2" fill="${GRAY_LIGHT}">${index}</text>
+<text class="mono" x="${PAD + 30}" y="${PAD + 4}" font-size="12" letter-spacing="2" fill="${INK}">${title}</text>
+<line x1="${PAD}" y1="${PAD + 16}" x2="${w - PAD}" y2="${PAD + 16}" stroke="${BORDER}" stroke-width="1"/>`;
+}
+
+// ─── Nav pill (rounded chrome vs. square content) ───────────────────────────
+function navPill(x, y, items, activeIdx) {
+  const fs = 11;
+  const cw = 6.9; // approx mono char advance at 11px
+  const ls = 1.2;
+  const gap = 18;
+  const padX = 16;
+  const height = 30;
+  let inner = 0;
+  const widths = items.map((it) => it.length * (cw + ls));
+  inner = widths.reduce((a, b) => a + b, 0) + gap * (items.length - 1);
+  const pillW = inner + padX * 2;
+  let out = `<rect x="${x}" y="${y}" width="${pillW}" height="${height}" rx="${height / 2}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
+  let tx = x + padX;
+  const ty = y + height / 2 + fs / 2 - 1.5;
+  items.forEach((label, i) => {
+    const active = i === activeIdx;
+    out += `<text class="mono" x="${tx}" y="${ty}" font-size="${fs}" letter-spacing="${ls}" fill="${active ? INK : GRAY_LIGHT}">${label}</text>`;
+    if (active) {
+      out += `<rect x="${tx - 1}" y="${y + height - 6}" width="${widths[i]}" height="1.5" fill="${INK}"/>`;
+    }
+    tx += widths[i] + gap;
+  });
+  return { svg: out, width: pillW };
+}
+
+// ─── Header / hero card ─────────────────────────────────────────────────────
+function renderHeader(summary) {
+  const w = 900;
+  const h = 232;
+  let s = svgOpen(w, h);
+
+  // Ghost mascot, left.
+  const P = 5;
+  const gx = 44;
+  const gy = 44;
+  s += ghostMascot(gx, gy, P);
+
+  // Wordmark + tagline.
+  const tx = gx + 12 * P + 40;
+  s += `<text class="mono" x="${tx}" y="78" font-size="34" font-weight="600" letter-spacing="1.5" fill="${INK}">THE KOZU GROUP</text>`;
+  s += `<text x="${tx + 2}" y="104" font-size="14.5" fill="${GRAY_MID}">Building in the open. Read it. Fork it. Ship it.</text>`;
+
+  // Nav pill.
+  const nav = navPill(tx, 122, ['OVERVIEW', 'LANGUAGES', 'ACTIVITY', 'SOURCE'], 0);
+  s += nav.svg;
+
+  // Bottom stat strip.
+  const stripY = 172;
+  s += `<line x1="${PAD}" y1="${stripY}" x2="${w - PAD}" y2="${stripY}" stroke="${BORDER}" stroke-width="1"/>`;
+  const stats = [
+    { label: 'FOLLOWERS', value: summary.followers },
+    { label: 'STARS', value: summary.stars },
+    { label: 'FORKS', value: summary.forks },
+    { label: 'REPOSITORIES', value: summary.repos },
+  ];
+  const colW = (w - PAD * 2) / stats.length;
+  stats.forEach((st, i) => {
+    const cx = PAD + colW * i;
+    if (i > 0) s += `<line x1="${cx}" y1="${stripY + 12}" x2="${cx}" y2="${stripY + 44}" stroke="${BORDER}" stroke-width="1"/>`;
+    s += `<text class="mono" x="${cx + 20}" y="${stripY + 34}" font-size="26" font-weight="600" fill="${INK}">${st.value}</text>`;
+    s += `<text class="mono" x="${cx + 21}" y="${stripY + 50}" font-size="10" letter-spacing="1.5" fill="${GRAY_LIGHT}">${st.label}</text>`;
+  });
+
+  s += `</svg>`;
+  return s;
+}
+
+// ─── Languages card ─────────────────────────────────────────────────────────
+function renderLanguages(langs) {
+  const w = 440;
+  const filtered = langs.filter((l) => parseFloat(l.percent) >= 1.0).slice(0, 6);
+  const rowH = 34;
+  const top = PAD + 40;
+  const h = top + filtered.length * rowH + 14;
+  let s = svgOpen(w, h);
+  s += cardHeader(w, '02', 'LANGUAGES');
+
+  const barX = 138;
+  const barMax = w - PAD - barX - 44;
+  const maxPct = Math.max(...filtered.map((l) => parseFloat(l.percent)), 1);
+
+  filtered.forEach((lang, i) => {
+    const y = top + i * rowH;
+    const cy = y + rowH / 2;
+    const idx = String(i + 1).padStart(2, '0');
+    const shade = BAR_RAMP[Math.min(i, BAR_RAMP.length - 1)];
+    const pct = parseFloat(lang.percent);
+    const bw = Math.max((pct / maxPct) * barMax, 3);
+    s += `<text class="mono" x="${PAD}" y="${cy + 4}" font-size="12" fill="${GRAY_LIGHT}">${idx}</text>`;
+    s += `<text x="${PAD + 26}" y="${cy + 4}" font-size="12.5" fill="${INK}">${escapeXml(lang.name)}</text>`;
+    s += `<rect x="${barX}" y="${cy - 5}" width="${barMax}" height="10" rx="1" fill="#efefef"/>`;
+    s += `<rect class="bar" x="${barX}" y="${cy - 5}" width="${bw.toFixed(1)}" height="10" rx="1" fill="${shade}" style="animation-delay:${(i * 0.09).toFixed(2)}s"/>`;
+    s += `<text class="mono" x="${w - PAD}" y="${cy + 4}" font-size="12" fill="${GRAY_MID}" text-anchor="end">${lang.percent}%</text>`;
+  });
+
+  s += `</svg>`;
+  return s;
+}
+
+// ─── Contribution activity card (monochrome heatmap) ────────────────────────
+function renderContributions(weeks, totalContributions) {
+  const w = 440;
+  const cell = 8;
+  const gap = 2;
+  const stride = cell + gap;
+  const gutterL = 22; // day labels
+  const labelTop = 14; // month labels
+  const graphX = PAD + gutterL;
+  const graphMaxW = w - PAD - graphX;
+  const weeksFit = Math.floor(graphMaxW / stride);
+  const shown = weeks.slice(Math.max(0, weeks.length - weeksFit));
+
+  const top = PAD + 40;
+  const graphY = top + labelTop;
+  const graphH = 7 * stride;
+  const legendY = graphY + graphH + 20;
+  const h = legendY + 14;
+  let s = svgOpen(w, h);
+  s += cardHeader(w, '03', 'ACTIVITY');
+
+  // total caption (right-aligned in header row)
+  s += `<text class="mono" x="${w - PAD}" y="${PAD + 4}" font-size="11" letter-spacing="1" fill="${GRAY_LIGHT}" text-anchor="end">${totalContributions} / YEAR</text>`;
+
+  // month labels
+  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  let lastMonth = -1;
+  let labels = '';
+  shown.forEach((week, wi) => {
+    const first = week.contributionDays.find((d) => d && d.date);
+    if (!first) return;
+    const m = new Date(first.date + 'T00:00:00').getMonth();
+    if (m !== lastMonth && wi % 4 === 0) {
+      labels += `<text class="mono" x="${graphX + wi * stride}" y="${graphY - 4}" font-size="9" letter-spacing="0.5" fill="${GRAY_LIGHT}">${MONTHS[m]}</text>`;
+      lastMonth = m;
+    }
+  });
+
+  // day labels (Mon / Wed / Fri)
+  const DAYS = ['', 'MON', '', 'WED', '', 'FRI', ''];
+  DAYS.forEach((label, d) => {
+    if (label) labels += `<text class="mono" x="${graphX - 6}" y="${graphY + d * stride + cell}" font-size="8" fill="${GRAY_LIGHT}" text-anchor="end">${label}</text>`;
+  });
+
+  // cells
+  let cells = '';
+  shown.forEach((week, wi) => {
+    for (let d = 0; d < 7; d++) {
+      const day = week.contributionDays[d];
+      if (!day) continue;
+      const lvl = day.level !== undefined ? day.level : levelForCount(day.contributionCount);
+      const x = graphX + wi * stride;
+      const y = graphY + d * stride;
+      const delay = (wi * 0.014).toFixed(3);
+      cells += `<rect class="cell" x="${x}" y="${y}" width="${cell}" height="${cell}" rx="1.5" fill="${HEAT_RAMP[lvl]}" style="animation-delay:${delay}s"/>`;
+    }
+  });
+
+  // legend
+  const sq = 8;
+  const sgap = 3;
+  const legTotal = HEAT_RAMP.length * sq + (HEAT_RAMP.length - 1) * sgap;
+  const cx = (w - legTotal) / 2;
+  let legend = `<text class="mono" x="${cx - 8}" y="${legendY + sq - 1}" font-size="9" fill="${GRAY_LIGHT}" text-anchor="end">LESS</text>`;
+  HEAT_RAMP.forEach((c, i) => {
+    legend += `<rect x="${cx + i * (sq + sgap)}" y="${legendY}" width="${sq}" height="${sq}" rx="1.5" fill="${c}"/>`;
+  });
+  legend += `<text class="mono" x="${cx + legTotal + 8}" y="${legendY + sq - 1}" font-size="9" fill="${GRAY_LIGHT}">MORE</text>`;
+
+  s += labels + cells + legend;
+  s += `</svg>`;
+  return s;
+}
+
+// ─── Streak / overview card (pixel numbers + sparkline) ──────────────────────
+function renderStreak(streak, weeks) {
+  const w = 900;
+  const h = 208;
+  let s = svgOpen(w, h);
+  s += cardHeader(w, '04', 'STREAK');
+
+  const top = PAD + 40;
+  const numbers = [
+    { value: streak.total, label: 'TOTAL CONTRIBUTIONS' },
+    { value: streak.current, label: 'CURRENT STREAK' },
+    { value: streak.longest, label: 'LONGEST STREAK' },
+  ];
+
+  // Left: three pixel-number columns.
+  const cellSz = 6;
+  const colW = 190;
+  const colStart = PAD;
+  numbers.forEach((n, i) => {
+    const colCx = colStart + colW * i + colW / 2;
+    const txt = String(n.value);
+    const nw = pixelWidth(txt, cellSz);
+    const nx = colCx - nw / 2;
+    const ny = top + 18;
+    const pix = pixelDigits(txt, nx, ny, cellSz, INK, '');
+    s += `<g class="pix" style="animation-delay:${(i * 0.12 + 0.1).toFixed(2)}s">${pix.svg}</g>`;
+    s += `<text class="mono" x="${colCx}" y="${ny + 42 + 22}" font-size="10.5" letter-spacing="1.3" fill="${GRAY_LIGHT}" text-anchor="middle">${n.label}</text>`;
+    if (i < numbers.length - 1) {
+      const lx = colStart + colW * (i + 1);
+      s += `<line x1="${lx}" y1="${top + 6}" x2="${lx}" y2="${top + 78}" stroke="${BORDER}" stroke-width="1"/>`;
+    }
+  });
+
+  // Right: weekly-contribution sparkline.
+  const sparkX = colStart + colW * 3 + 30;
+  const sparkY = top + 6;
+  const sparkW = w - PAD - sparkX;
+  const sparkH = 80;
+  s += `<line x1="${sparkX - 15}" y1="${top + 6}" x2="${sparkX - 15}" y2="${top + 78}" stroke="${BORDER}" stroke-width="1"/>`;
+  s += `<text class="mono" x="${sparkX}" y="${sparkY + 4}" font-size="10.5" letter-spacing="1.3" fill="${GRAY_LIGHT}">WEEKLY ACTIVITY · LAST ${Math.min(weeks.length, 30)} WEEKS</text>`;
+  s += sparkline(weeks, sparkX, sparkY + 16, sparkW, sparkH);
+
+  s += `</svg>`;
+  return s;
+}
+
+function sparkline(weeks, x, y, w, h) {
+  const recent = weeks.slice(Math.max(0, weeks.length - 30));
+  const vals = recent.map((wk) => wk.contributionDays.reduce((a, d) => a + ((d && d.contributionCount) || 0), 0));
+  const maxV = Math.max(...vals, 1);
+  const n = vals.length;
+  const step = n > 1 ? w / (n - 1) : w;
+  const pts = vals.map((v, i) => [x + i * step, y + h - (v / maxV) * h]);
+  const line = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const area = `${x},${y + h} ${line} ${x + (n - 1) * step},${y + h}`;
+  const baseline = `<line x1="${x}" y1="${y + h}" x2="${x + w}" y2="${y + h}" stroke="${BORDER}" stroke-width="1"/>`;
+  const fill = `<polygon class="sparkfill" points="${area}" fill="${INK}" opacity="0.05"/>`;
+  const stroke = `<polyline class="spark" points="${line}" fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  // marker on last point
+  const last = pts[pts.length - 1];
+  const dot = `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3" fill="${INK}"/>`;
+  return baseline + fill + stroke + dot;
+}
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+function escapeXml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function levelForCount(count) {
+  if (!count) return 0;
+  if (count <= 2) return 1;
+  if (count <= 5) return 2;
+  if (count <= 8) return 3;
+  return 4;
+}
+
+function computeStreak(weeks) {
+  const allDays = weeks.flatMap((w) => w.contributionDays).filter(Boolean);
+  const today = new Date().toISOString().split('T')[0];
+  let current = 0;
+  for (let i = allDays.length - 1; i >= 0; i--) {
+    const day = allDays[i];
+    if (day.contributionCount > 0) current++;
+    else if (i === allDays.length - 1 && day.date === today) continue;
+    else break;
+  }
+  let longest = 0;
+  let temp = 0;
+  for (const day of allDays) {
+    if (day.contributionCount > 0) { temp++; longest = Math.max(longest, temp); } else temp = 0;
+  }
+  return { current, longest };
+}
+
+// ─── data fetch (CI path) ───────────────────────────────────────────────────
+async function queryGraphQL(query) {
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `bearer ${TOKEN}`,
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: `bearer ${TOKEN}` },
     body: JSON.stringify({ query }),
   });
   if (!res.ok) throw new Error(`GraphQL error: ${res.status}`);
@@ -39,412 +422,94 @@ async function queryGitHubGraphQL(query) {
   return json.data;
 }
 
-async function fetchGitHubRest(endpoint) {
-  const headers = {
-    Accept: 'application/vnd.github.v3+json',
-  };
+async function fetchRest(endpoint) {
+  const headers = { Accept: 'application/vnd.github.v3+json', 'User-Agent': `${USERNAME}-profile` };
   if (TOKEN) headers.Authorization = `token ${TOKEN}`;
   const res = await fetch(`https://api.github.com/${endpoint}`, { headers });
   if (!res.ok) throw new Error(`REST error: ${res.status} on ${endpoint}`);
   return res.json();
 }
 
-// ─── Card Shell ───
-function cardShell(title, iconSvg, content, height) {
-  const w = CARD_WIDTH;
-  const r = CARD_RADIUS;
-  const shadowId = `shadow-${Math.random().toString(36).slice(2)}`;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${w}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="${shadowId}" x="-2%" y="-2%" width="108%" height="112%">
-      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.06"/>
-    </filter>
-  </defs>
-  <rect x="0" y="0" width="${w}" height="${height}" rx="${r}" fill="${CARD_BG}" stroke="${CARD_BORDER}" stroke-width="1" filter="url(#${shadowId})"/>
-  <g transform="translate(${CARD_PADDING}, 20)">
-    <g transform="scale(0.9)">${iconSvg}</g>
-    <text x="28" y="14" font-family="${FONT}" font-size="${TYPE.header.size}" font-weight="${TYPE.header.weight}" fill="${TYPE.header.fill}" letter-spacing="${TYPE.header.spacing}" text-transform="uppercase">${title.toUpperCase()}</text>
-  </g>
-  <line x1="${CARD_PADDING}" y1="48" x2="${w - CARD_PADDING}" y2="48" stroke="${CARD_BORDER}" stroke-width="1"/>
-  <g transform="translate(${CARD_PADDING}, 56)">
-    ${content}
-  </g>
-</svg>`;
-}
-
-// ─── Streak Card ───
-function generateStreakCard(data) {
-  const total = data.user.contributionsCollection.contributionCalendar.totalContributions;
-  const weeks = data.user.contributionsCollection.contributionCalendar.weeks;
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let tempStreak = 0;
-  
-  // Flatten all days
-  const allDays = weeks.flatMap(w => w.contributionDays);
-  
-  // Calculate streaks from the end (most recent)
-  for (let i = allDays.length - 1; i >= 0; i--) {
-    if (allDays[i].contributionCount > 0) {
-      tempStreak++;
-    } else {
-      if (i === allDays.length - 1) {
-        // Today might not be over yet, check if it's actually today
-        const today = new Date().toISOString().split('T')[0];
-        if (allDays[i].date === today) continue;
+async function fetchData() {
+  const gql = await queryGraphQL(`
+    query {
+      user(login: "${USERNAME}") {
+        followers { totalCount }
+        repositories(first: 100, ownerAffiliations: OWNER, isFork: false) {
+          totalCount
+          nodes {
+            stargazerCount
+            forkCount
+            languages(first: 10) { edges { size node { name } } }
+          }
+        }
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+            weeks { contributionDays { contributionCount date } }
+          }
+        }
       }
-      longestStreak = Math.max(longestStreak, tempStreak);
-      tempStreak = 0;
-      if (currentStreak === 0) currentStreak = longestStreak;
-    }
-  }
-  longestStreak = Math.max(longestStreak, tempStreak);
-  if (currentStreak === 0) currentStreak = tempStreak;
+    }`);
 
-  const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-6 8-6 13a6 6 0 0012 0c0-5-6-13-6-13z"/><path d="M12 22c0 0 4-4 4-8" stroke="#fbbf24"/></svg>`;
+  const user = gql.user;
+  const repos = user.repositories.nodes;
 
-  const col1X = 0;
-  const col2X = (CARD_WIDTH - CARD_PADDING * 2) / 3;
-  const col3X = ((CARD_WIDTH - CARD_PADDING * 2) / 3) * 2;
-  const colWidth = (CARD_WIDTH - CARD_PADDING * 2) / 3;
+  const summary = {
+    followers: user.followers.totalCount,
+    repos: user.repositories.totalCount,
+    stars: repos.reduce((a, r) => a + r.stargazerCount, 0),
+    forks: repos.reduce((a, r) => a + r.forkCount, 0),
+  };
 
-  const content = `
-    <text x="${col1X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.display.weight}" fill="${TYPE.display.fill}">${total}</text>
-    <text x="${col1X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Total</text>
-    <text x="${col1X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Contributions</text>
-
-    <text x="${col2X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.displayAccent.weight}" fill="${TYPE.displayAccent.fill}">${currentStreak}</text>
-    <text x="${col2X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Current</text>
-    <text x="${col2X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Streak</text>
-
-    <text x="${col3X + colWidth/2}" y="30" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.display.size}" font-weight="${TYPE.display.weight}" fill="${TYPE.display.fill}">${longestStreak}</text>
-    <text x="${col3X + colWidth/2}" y="50" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Longest</text>
-    <text x="${col3X + colWidth/2}" y="65" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.caption.size}" font-weight="${TYPE.caption.weight}" fill="${TYPE.caption.fill}">Streak</text>
-  `;
-
-  const svg = cardShell('Contribution Streak', icon, content, 148);
-  fs.writeFileSync('stats/streak.svg', svg);
-}
-
-// ─── Contribution Graph Card ───
-function generateContributionGraph(data) {
-  const weeks = data.user.contributionsCollection.contributionCalendar.weeks;
-  const levels = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
-  
-  const cellSize = 6;
-  const cellGap = 2;
-  const weekStride = cellSize + cellGap;
-  const weeksToShow = Math.min(weeks.length, 36); // ~8 months, guaranteed margin
-  const graphWidth = weeksToShow * weekStride;
-  const graphHeight = 7 * weekStride;
-  
-  const contentWidth = CARD_WIDTH - CARD_PADDING * 2;
-  const offsetX = 28; // fixed left margin instead of center (simpler, leaves room on right)
-  const offsetY = 14;
-
-  let cells = '';
-  const monthLabels = [];
-  let lastMonth = -1;
-
-  for (let w = 0; w < weeksToShow; w++) {
-    const week = weeks[weeks.length - weeksToShow + w];
-    for (let d = 0; d < 7; d++) {
-      const day = week.contributionDays[d];
-      if (!day) continue;
-      const count = day.contributionCount;
-      let color;
-      if (count === 0) color = levels[0];
-      else if (count <= 2) color = levels[1];
-      else if (count <= 5) color = levels[2];
-      else if (count <= 8) color = levels[3];
-      else color = levels[4];
-
-      const x = offsetX + w * weekStride;
-      const y = offsetY + d * weekStride;
-      cells += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" rx="1.5" fill="${color}"/>\n`;
-    }
-
-    const firstDay = week.contributionDays[0];
-    if (firstDay) {
-      const month = new Date(firstDay.date).getMonth();
-      if (month !== lastMonth && w % 4 === 0) {
-        monthLabels.push({
-          x: offsetX + w * weekStride,
-          label: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month]
-        });
-        lastMonth = month;
-      }
-    }
-  }
-
-  let labels = '';
-  monthLabels.forEach(m => {
-    labels += `<text x="${m.x}" y="${offsetY - 4}" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">${m.label}</text>\n`;
-  });
-
-  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
-  dayLabels.forEach((label, i) => {
-    if (label) {
-      labels += `<text x="${offsetX - 6}" y="${offsetY + i * weekStride + 5}" text-anchor="end" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">${label}</text>\n`;
-    }
-  });
-
-  // Legend — centered within card content area
-  const legendY = offsetY + graphHeight + 14;
-  const centerX = contentWidth / 2;
-  const squareSize = 8;
-  const squareGap = 2;
-  const squaresTotalWidth = levels.length * squareSize + (levels.length - 1) * squareGap;
-  const lessOffset = 45;  // distance from center to "Less" center point
-  const moreOffset = 45;  // distance from center to "More" center point
-  const squaresStartX = centerX - (squaresTotalWidth / 2);
-  
-  let legend = `<text x="${centerX - lessOffset}" y="${legendY}" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">Less</text>\n`;
-  levels.forEach((color, i) => {
-    legend += `<rect x="${squaresStartX + i * (squareSize + squareGap)}" y="${legendY - 8}" width="${squareSize}" height="${squareSize}" rx="2" fill="${color}"/>\n`;
-  });
-  legend += `<text x="${centerX + moreOffset}" y="${legendY}" text-anchor="middle" font-family="${FONT}" font-size="${TYPE.micro.size}" fill="${TYPE.micro.fill}">More</text>\n`;
-
-  const icon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
-
-  const content = labels + cells + legend;
-  const contentHeight = offsetY + graphHeight + 28;
-  const svg = cardShell('Contribution Activity', icon, content, 56 + contentHeight);
-  fs.writeFileSync('stats/contributions.svg', svg);
-}
-
-// ─── Languages Card ───
-function generateLanguageCard(repos) {
-  const langMap = {};
+  const langTotals = {};
   let totalBytes = 0;
-
-  repos.forEach(repo => {
-    if (repo.fork) return;
-    (repo.languages?.nodes || []).forEach(lang => {
-      // We need byte counts. GraphQL doesn't give bytes directly in this query easily without extra complexity.
-      // Fallback: use REST API language data combined with GraphQL repo list
+  repos.forEach((repo) => {
+    (repo.languages?.edges || []).forEach((edge) => {
+      langTotals[edge.node.name] = (langTotals[edge.node.name] || 0) + edge.size;
+      totalBytes += edge.size;
     });
   });
-
-  // Since we need byte counts and GraphQL color info, let's do a hybrid approach:
-  // Use REST API for byte counts (as we did before) but match colors from GraphQL if available
-}
-
-const LANG_COLORS = {
-  TypeScript: '#3178c6', JavaScript: '#f1e05a', Python: '#3572A5',
-  Rust: '#dea584', Go: '#00ADD8', HTML: '#e34c26', CSS: '#563d7c',
-  Java: '#b07219', 'C++': '#f34b7d', Vue: '#41b883', PHP: '#4F5D95',
-  Ruby: '#701516', Swift: '#F05138', Shell: '#89e051', 'C#': '#178600',
-  Kotlin: '#A97BFF', Dart: '#00B4AB', Scala: '#c22d40', R: '#198CE7',
-  'Objective-C': '#438eff', Elixir: '#6e4a7e', Clojure: '#db5855',
-  Haskell: '#5e5086', Lua: '#000080', Perl: '#0298c3', Erlang: '#B83998',
-  Julia: '#a270ba', OCaml: '#3be133', F: '#b845fc', PowerShell: '#012456',
-  'Jupyter Notebook': '#DA5B0B', Dockerfile: '#384d54', Makefile: '#427819',
-  C: '#555555'
-};
-
-async function fetchRestLanguages(repos) {
-  const ownRepos = repos.filter(r => !r.fork);
-  const langData = await Promise.all(
-    ownRepos.map(async (repo) => {
-      try {
-        const res = await fetch(repo.languages_url, {
-          headers: TOKEN ? { Authorization: `token ${TOKEN}`, Accept: 'application/vnd.github.v3+json' } : { Accept: 'application/vnd.github.v3+json' }
-        });
-        return res.ok ? res.json() : {};
-      } catch {
-        return {};
-      }
-    })
-  );
-
-  const totals = {};
-  let sum = 0;
-  langData.forEach((map) => {
-    Object.entries(map).forEach(([lang, bytes]) => {
-      totals[lang] = (totals[lang] || 0) + bytes;
-      sum += bytes;
-    });
-  });
-
-  return Object.entries(totals)
-    .map(([name, bytes]) => ({
-      name,
-      percent: ((bytes / sum) * 100).toFixed(1),
-      color: LANG_COLORS[name] || '#6e7681',
-    }))
+  const langs = Object.entries(langTotals)
+    .map(([name, bytes]) => ({ name, percent: ((bytes / totalBytes) * 100).toFixed(1) }))
     .sort((a, b) => parseFloat(b.percent) - parseFloat(a.percent))
     .slice(0, 8);
+
+  const cal = user.contributionsCollection.contributionCalendar;
+  const weeks = cal.weeks;
+  const streak = { total: cal.totalContributions, ...computeStreak(weeks) };
+
+  return { summary, langs, weeks, totalContributions: cal.totalContributions, streak };
 }
 
-async function generateLanguageCard(sortedLangs) {
-  // Filter out microscopic bars (less than 1% looks broken)
-  const filteredLangs = sortedLangs.filter(l => parseFloat(l.percent) >= 1.0);
-  
-  const barHeight = 22;
-  const barGap = 10;
-  const labelWidth = 110;
-  const graphContentHeight = filteredLangs.length * (barHeight + barGap);
-  
-  let langContent = '';
-  filteredLangs.forEach((lang, i) => {
-    const y = i * (barHeight + barGap);
-    const barMaxWidth = (CARD_WIDTH - CARD_PADDING * 2) - labelWidth - 50;
-    const barWidth = Math.max((parseFloat(lang.percent) / 100) * barMaxWidth, 4); // Min 4px so tiny bars still visible
-    
-    const nameColor = TYPE.label.fill;
-    const pctColor = TYPE.caption.fill;
-    langContent += `  <circle cx="6" cy="${y + barHeight/2}" r="5" fill="${lang.color}"/>
-  <text x="20" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="${TYPE.label.size}" font-weight="${TYPE.label.weight}" fill="${nameColor}">${lang.name}</text>
-  <rect x="${labelWidth}" y="${y + 3}" width="${barMaxWidth}" height="${barHeight - 6}" rx="4" fill="#f3f4f6"/>
-  <rect x="${labelWidth}" y="${y + 3}" width="${barWidth}" height="${barHeight - 6}" rx="4" fill="${lang.color}" opacity="0.85"/>
-  <text x="${labelWidth + barMaxWidth + 10}" y="${y + barHeight/2 + 4}" font-family="${FONT}" font-size="${TYPE.caption.size}" fill="${pctColor}">${lang.percent}%</text>
-`;
-  });
-
-  const langIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`;
-  const langCard = cardShell('Most Used Languages', langIcon, langContent, 56 + graphContentHeight);
-  fs.writeFileSync('stats/languages.svg', langCard);
+// ─── writer ─────────────────────────────────────────────────────────────────
+function writeCards(data) {
+  fs.mkdirSync('stats', { recursive: true });
+  fs.writeFileSync('stats/header.svg', renderHeader(data.summary));
+  fs.writeFileSync('stats/languages.svg', renderLanguages(data.langs));
+  fs.writeFileSync('stats/contributions.svg', renderContributions(data.weeks, data.totalContributions));
+  fs.writeFileSync('stats/streak.svg', renderStreak(data.streak, data.weeks));
 }
 
 async function main() {
   try {
-    fs.mkdirSync('stats', { recursive: true });
-
-    let graphQLData = null;
-    let sortedLangs = null;
-
-    // Try GraphQL first (better colors + contribution data)
-    if (TOKEN) {
-      try {
-        console.log('Fetching GraphQL data...');
-        graphQLData = await queryGitHubGraphQL(`
-          query {
-            user(login: "${USERNAME}") {
-              contributionsCollection {
-                contributionCalendar {
-                  totalContributions
-                  weeks {
-                    contributionDays {
-                      contributionCount
-                      date
-                    }
-                  }
-                }
-              }
-              repositories(first: 100, ownerAffiliations: OWNER, isFork: false) {
-                nodes {
-                  name
-                  languages(first: 10) {
-                    edges {
-                      size
-                      node {
-                        name
-                        color
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `);
-
-        // Process languages from GraphQL
-        const langTotals = {};
-        let totalBytes = 0;
-        const repos = graphQLData.user.repositories.nodes;
-        
-        repos.forEach(repo => {
-          (repo.languages?.edges || []).forEach(edge => {
-            const name = edge.node.name;
-            const bytes = edge.size;
-            const color = edge.node.color;
-            if (!langTotals[name]) {
-              langTotals[name] = { bytes: 0, color };
-            }
-            langTotals[name].bytes += bytes;
-            totalBytes += bytes;
-          });
-        });
-
-        sortedLangs = Object.entries(langTotals)
-          .map(([name, data]) => ({
-            name,
-            percent: ((data.bytes / totalBytes) * 100).toFixed(1),
-            color: data.color || '#6e7681',
-          }))
-          .sort((a, b) => parseFloat(b.percent) - parseFloat(a.percent))
-          .slice(0, 8);
-
-        console.log('GraphQL data fetched successfully.');
-      } catch (err) {
-        console.log('GraphQL failed, falling back to REST:', err.message);
-        graphQLData = null;
-      }
-    }
-
-    // Fallback to REST for profile/repos
-    console.log('Fetching REST data...');
-    const profile = await fetchGitHubRest(`users/${USERNAME}`);
-    const repos = await fetchGitHubRest(`users/${USERNAME}/repos?per_page=100&sort=updated`);
-
-    if (!sortedLangs) {
-      sortedLangs = await fetchRestLanguages(repos);
-    }
-
-    // Generate contribution data from REST if GraphQL failed
-    if (!graphQLData) {
-      // Create pseudo contribution data from commit activity
-      const createdAt = new Date(profile.created_at);
-      const now = new Date();
-      const weeks = [];
-      const totalWeeks = 52;
-      
-      for (let w = 0; w < totalWeeks; w++) {
-        const days = [];
-        for (let d = 0; d < 7; d++) {
-          const date = new Date(now.getTime() - ((totalWeeks - w) * 7 + (6 - d)) * 24 * 60 * 60 * 1000);
-          // Use repo push dates to estimate activity
-          const activity = repos.filter(r => {
-            const pushed = new Date(r.pushed_at);
-            return pushed.toDateString() === date.toDateString();
-          }).length;
-          days.push({
-            contributionCount: activity > 0 ? Math.min(activity * 3 + 1, 10) : 0,
-            date: date.toISOString().split('T')[0]
-          });
-        }
-        weeks.push({ contributionDays: days });
-      }
-
-      graphQLData = {
-        user: {
-          contributionsCollection: {
-            contributionCalendar: {
-              totalContributions: repos.reduce((acc, r) => acc + (r.pushed_at ? 1 : 0), 0) * 3,
-              weeks: weeks
-            }
-          }
-        }
-      };
-    }
-
-    console.log('Generating streak card...');
-    generateStreakCard(graphQLData);
-
-    console.log('Generating contribution graph...');
-    generateContributionGraph(graphQLData);
-
-    console.log('Generating language card...');
-    await generateLanguageCard(sortedLangs);
-
-    console.log('Done! All 3 cohesive cards generated.');
+    const data = await fetchData();
+    writeCards(data);
+    console.log('Done — Ghost stat cards generated.');
   } catch (err) {
     console.error('Error:', err.message);
     process.exit(1);
   }
 }
 
-main();
+module.exports = {
+  renderHeader,
+  renderLanguages,
+  renderContributions,
+  renderStreak,
+  computeStreak,
+  writeCards,
+  levelForCount,
+};
+
+if (require.main === module) main();
