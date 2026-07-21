@@ -91,21 +91,14 @@ function logoMark(centerX, centerY, targetH) {
   const left = centerX - bw / 2;
   const top = centerY - bh / 2;
   const tx = left - LOGO_BBOX.x * scale;
-  const shadow = `<ellipse class="mshadow" cx="${centerX}" cy="${(top + bh + 9).toFixed(2)}" rx="${(bw * 0.62).toFixed(2)}" ry="${(targetH * 0.055).toFixed(2)}" fill="${INK}" opacity="0.12"/>`;
-  // Outer group carries the float animation (CSS transform); inner group carries
-  // the static translate/scale so the two transforms don't collide.
-  const mark = `<g class="mark"><g transform="translate(${tx.toFixed(2)},${top.toFixed(2)}) scale(${scale.toFixed(4)})"><path d="${LOGO_PATH}" fill="${INK}"/></g></g>`;
-  return shadow + mark;
+  // Static mark — no shadow, no animation.
+  return `<g transform="translate(${tx.toFixed(2)},${top.toFixed(2)}) scale(${scale.toFixed(4)})"><path d="${LOGO_PATH}" fill="${INK}"/></g>`;
 }
 
 // ─── Shared animation CSS ───────────────────────────────────────────────────
 const ANIM_CSS = `
   text{font-family:${SANS};}
   .mono{font-family:${MONO};}
-  .mark{transform-box:fill-box;transform-origin:center;animation:bob 3s ease-in-out infinite;}
-  .mshadow{transform-box:fill-box;transform-origin:center;animation:shadowpulse 3s ease-in-out infinite;}
-  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-  @keyframes shadowpulse{0%,100%{transform:scaleX(1);opacity:.12}50%{transform:scaleX(.72);opacity:.06}}
   .bar{transform-box:fill-box;transform-origin:left center;animation:grow .9s cubic-bezier(.4,0,.2,1) both;}
   @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
   .cell{animation:fade .5s ease-out both;}
@@ -170,25 +163,24 @@ function navPill(x, y, items, activeIdx) {
 // ─── Header / hero card ─────────────────────────────────────────────────────
 function renderHeader(summary) {
   const w = 900;
-  const h = 232;
+  const h = 196;
   let s = svgOpen(w, h);
 
-  // Brand mark (the floating Kozu "K"), left.
+  // Brand mark (the Kozu "K"), left.
   const markCenterX = 76;
-  const markCenterY = 72;
+  const markCenterY = 76;
   s += logoMark(markCenterX, markCenterY, 84);
 
-  // Wordmark + tagline.
+  // Wordmark.
   const tx = 150;
-  s += `<text class="mono" x="${tx}" y="78" font-size="34" font-weight="600" letter-spacing="1.5" fill="${INK}">THE KOZU GROUP</text>`;
-  s += `<text x="${tx + 2}" y="104" font-size="14.5" fill="${GRAY_MID}">Building in the open. Read it. Fork it. Ship it.</text>`;
+  s += `<text class="mono" x="${tx}" y="66" font-size="34" font-weight="600" letter-spacing="1.5" fill="${INK}">THE KOZU GROUP</text>`;
 
   // Nav pill.
-  const nav = navPill(tx, 122, ['OVERVIEW', 'LANGUAGES', 'ACTIVITY', 'SOURCE'], 0);
+  const nav = navPill(tx, 88, ['OVERVIEW', 'LANGUAGES', 'ACTIVITY', 'SOURCE'], 0);
   s += nav.svg;
 
   // Bottom stat strip.
-  const stripY = 172;
+  const stripY = 138;
   s += `<line x1="${PAD}" y1="${stripY}" x2="${w - PAD}" y2="${stripY}" stroke="${BORDER}" stroke-width="1"/>`;
   const stats = [
     { label: 'FOLLOWERS', value: summary.followers },
