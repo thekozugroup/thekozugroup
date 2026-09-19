@@ -1,6 +1,6 @@
 <div align="center">
 
-<img alt="The Kozu Group" src="stats/header.svg" width="900">
+<img alt="Kōzu Group" src="stats/header.svg" width="900">
 
 <br><br>
 
@@ -12,4 +12,4 @@
 
 </div>
 
-<p align="center"><sub>Monochrome stat cards, generated on GitHub Actions and refreshed every six hours. The whole thing lives on GitHub — read it, fork it, self-host it.</sub></p>
+<p align="center"><sub>Stat cards in the Kōzu Group design system — paper, ink and hairlines, generated on GitHub Actions and refreshed every six hours.</sub></p>

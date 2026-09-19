@@ -1,187 +1,123 @@
 /**
- * Ghost — profile stat cards for thekozugroup.
+ * Kōzu Group — profile stat cards.
  *
- * A monochrome, editorial, retro-gaming stat system rendered as self-contained
- * animated SVG. Follows the Ghost design language: pure-white canvas, near-black
- * ink, a four-step neutral-gray ramp, hairline borders, sharp square content vs.
- * rounded pill chrome, a pixel-art ghost mascot as the sole brand mark, and one
- * ambient animation (the mascot bob). Color comes only from data — the chrome is
- * strictly monochrome. Motion is CSS-only and settles under prefers-reduced-motion.
+ * Rendered to self-contained SVG in the Kōzu Group design language: neutral
+ * paper, near-black ink, a four-step text ramp, hairlines before shadows, no
+ * radii, no decorative colour. Quattrocento (display) carries the wordmark and
+ * the figures; Inter carries everything else. The cards are deliberately
+ * static — the brand reserves motion for the typewriter on kozugroup.com.
+ *
+ * Because GitHub serves these as <img>, webfonts never load; the families below
+ * are the design system's own declared fallback chains.
  *
  * Render functions are pure (data in, SVG string out) and exported so the same
- * code path can render live (in CI, with a token) or from a snapshot.
+ * code path renders live (in CI, with a token) or from a snapshot.
  */
 const fs = require('fs');
 
 const USERNAME = process.env.GITHUB_USERNAME || 'thekozugroup';
 const TOKEN = process.env.GITHUB_TOKEN;
 
-// ─── Ghost design tokens ───────────────────────────────────────────────────
-const SURFACE = '#ffffff'; // canvas
-const INK = '#111111'; // on-surface — headings / primary
-const CHARCOAL = '#2a2a2a'; // neutral-90
-const GRAY_DARK = '#333333'; // neutral-70
-const GRAY_MID = '#555555'; // neutral-50 — body
-const GRAY_LIGHT = '#777777'; // neutral-40 — muted / captions
-const BORDER = '#dddddd'; // neutral-20 — hairline
-const STONE = '#f7f4ef'; // warm off-white accent (sparingly)
+// ─── Kōzu tokens (tokens/color.css) ─────────────────────────────────────────
+const PAPER = '#f5f6f7'; // --kz-paper
+const PAPER_INSET = '#e3e5e7'; // --kz-paper-inset — bar tracks
+const INK = '#212325'; // --kz-text-primary
+const INK2 = '#36383a'; // --kz-ink-2
+const INK3 = '#535558'; // --kz-text-secondary
+const INK4 = '#6a6c6f'; // --kz-text-muted — lightest tone allowed to carry text
+const LINE = '#2123251a'; // --kz-line — the default hairline
 
-// Monochrome data ramps (data carries the only "color").
-const BAR_RAMP = ['#161616', '#2a2a2a', '#3d3d3d', '#565656', '#6f6f6f', '#8a8a8a', '#a3a3a3', '#bdbdbd'];
-const HEAT_RAMP = ['#ededed', '#c6c6c6', '#8f8f8f', '#4d4d4d', '#161616'];
+// Graphic ramps. ink-5 is permitted here: these are graphics, never text.
+const BAR_RAMP = ['#212325', '#36383a', '#4a4c4f', '#535558', '#6a6c6f', '#8a8c8f'];
+const HEAT_RAMP = ['#e3e5e7', '#afb1b4', '#6a6c6f', '#36383a', '#212325'];
 
-const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,'DejaVu Sans Mono',monospace";
+// tokens/typography.css — declared fallback chains (webfonts cannot load here)
+const DISPLAY = '"Quattrocento",Georgia,"Times New Roman",serif';
+const TEXT = '"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif';
 
-const PAD = 28;
-const H_HALF = 280; // shared height for the two side-by-side data cards
+const PAD = 32; // on the 2·4·6·8·12·16·20·24·32… scale
+const H_ROW = 280; // shared height of the two side-by-side panels
 
-// ─── 5×7 pixel digit font (retro score-counter numerals) ────────────────────
-const FONT5x7 = {
-  '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
-  '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
-  '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
-  '3': ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
-  '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
-  '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
-  '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
-  '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
-  '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
-  '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
-};
+// ─── The refined Kōzu mark ──────────────────────────────────────────────────
+const MARK_PATH =
+  'M0 1490L192 1490L192 1060.23A60 60 0 0 1 282 1008.27L1116.38 1490L1207.88 1331.52L282 796.96A60 60 0 0 1 282 693.04L1207.88 158.48L1116.38 0L282 481.73A60 60 0 0 1 192 429.77L192 0L0 0Z';
+const MARK_W = 1207.88;
+const MARK_H = 1490;
 
-function pixelDigits(text, x, y, cell, color, cls) {
-  let out = '';
-  let cx = x;
-  for (const ch of String(text)) {
-    if (ch === ' ') { cx += cell * 3; continue; }
-    const glyph = FONT5x7[ch];
-    if (!glyph) { cx += cell * 6; continue; }
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 5; c++) {
-        if (glyph[r][c] === '1') {
-          out += `<rect x="${(cx + c * cell).toFixed(1)}" y="${(y + r * cell).toFixed(1)}" width="${cell}" height="${cell}"/>`;
-        }
-      }
-    }
-    cx += cell * 6; // 5 wide + 1 gap
-  }
-  const width = cx - x - cell;
-  const g = `<g class="${cls || ''}" fill="${color}">${out}</g>`;
-  return { svg: g, width };
+/** The mark at a given cap height, its top-left at (x, y). */
+function logoMark(x, y, height, fill) {
+  const s = height / MARK_H;
+  return `<g transform="translate(${x.toFixed(2)},${y.toFixed(2)}) scale(${s.toFixed(5)})"><path d="${MARK_PATH}" fill="${fill || INK}"/></g>`;
+}
+function markWidth(height) {
+  return (MARK_W / MARK_H) * height;
 }
 
-function pixelWidth(text, cell) {
-  let w = 0;
-  for (const ch of String(text)) w += ch === ' ' ? cell * 3 : cell * 6;
-  return w - cell;
+// ─── primitives ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ─── Kozu brand mark (the "K" monogram, sole brand mark) ────────────────────
-// Native artwork is authored on a 500×500 grid; bounding box is x[129.47,370.52]
-// y[0,500] — tall and narrow (≈241×500). We centre + scale it into the header.
-const LOGO_PATH =
-  'M129.47,0v500h64.28v-128.05c0-11.45,13.85-17.19,21.95-9.09l109.37,109.37,45.45-45.45-167.69-167.69c-5.02-5.02-5.02-13.16,0-18.18l167.69-167.69-45.45-45.45-109.37,109.37c-8.1,8.1-21.95,2.36-21.95-9.09V0h-64.28Z';
-const LOGO_BBOX = { x: 129.47, y: 0, w: 241.05, h: 500 };
-
-function logoMark(centerX, centerY, targetH) {
-  const scale = targetH / LOGO_BBOX.h;
-  const bw = LOGO_BBOX.w * scale;
-  const bh = LOGO_BBOX.h * scale;
-  const left = centerX - bw / 2;
-  const top = centerY - bh / 2;
-  const tx = left - LOGO_BBOX.x * scale;
-  // Static mark — no shadow, no animation.
-  return `<g transform="translate(${tx.toFixed(2)},${top.toFixed(2)}) scale(${scale.toFixed(4)})"><path d="${LOGO_PATH}" fill="${INK}"/></g>`;
+/** Rough advance width; enough to place a hairline after a label. */
+function textWidth(str, size, tracking) {
+  return String(str).length * (size * 0.62 + (tracking || 0));
 }
 
-// ─── Shared animation CSS ───────────────────────────────────────────────────
-const ANIM_CSS = `
-  text{font-family:${SANS};}
-  .mono{font-family:${MONO};}
-  .bar{transform-box:fill-box;transform-origin:left center;animation:grow .9s cubic-bezier(.4,0,.2,1) both;}
-  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-  .cell{animation:fade .5s ease-out both;}
-  @keyframes fade{from{opacity:0}to{opacity:1}}
-  .pix{transform-box:fill-box;transform-origin:center;animation:pop .5s ease-out both;}
-  @keyframes pop{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-  .spark{stroke-dasharray:1600;stroke-dashoffset:0;animation:draw 1.8s ease-out both;}
-  @keyframes draw{from{stroke-dashoffset:1600}to{stroke-dashoffset:0}}
-  .sparkfill{animation:fade 1.8s ease-out both;}
-  @media (prefers-reduced-motion:reduce){*{animation:none!important}}`;
-
-// Open an SVG document (no card frame drawn — callers add cardRect/panels).
-function svgHead(w, h, extraStyle = '') {
+function svgHead(w, h) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img">
-<style>${ANIM_CSS}${extraStyle}</style>`;
+<style>text{font-family:${TEXT};}.display{font-family:${DISPLAY};}</style>`;
 }
 
-// A flat white card with a hairline border and sharp square corners.
+/** A resting card: flat paper, one hairline, square corners. */
 function cardRect(x, y, w, h) {
-  return `<rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${h - 1}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
+  return `<rect x="${x + 0.5}" y="${y + 0.5}" width="${w - 1}" height="${h - 1}" fill="${PAPER}" stroke="${LINE}" stroke-width="1"/>`;
 }
 
-// Single-card document (frame + open) for a full card at the origin.
-function svgOpen(w, h, extraStyle = '') {
-  return svgHead(w, h, extraStyle) + cardRect(0, 0, w, h);
+/** Uppercase metadata — 12px / 0.08em, per the type rules. */
+function meta(x, y, str, fill, anchor) {
+  const a = anchor ? ` text-anchor="${anchor}"` : '';
+  return `<text x="${x}" y="${y}" font-size="12" font-weight="500" letter-spacing="0.96" fill="${fill || INK3}"${a}>${esc(str)}</text>`;
 }
 
-// Standard card header: mono eyebrow "NN / TITLE" + hairline divider.
-function cardHeader(w, index, title) {
-  return `<text class="mono" x="${PAD}" y="${PAD + 4}" font-size="12" letter-spacing="2" fill="${GRAY_LIGHT}">${index}</text>
-<text class="mono" x="${PAD + 30}" y="${PAD + 4}" font-size="12" letter-spacing="2" fill="${INK}">${title}</text>
-<line x1="${PAD}" y1="${PAD + 16}" x2="${w - PAD}" y2="${PAD + 16}" stroke="${BORDER}" stroke-width="1"/>`;
+/**
+ * The design system's Rule-with-label: a label, then a hairline running to the
+ * right edge. An optional right-hand figure sits at the end of the rule.
+ */
+function ruleLabel(x, y, w, label, right) {
+  const lw = textWidth(label, 12, 0.96);
+  let s = meta(x, y + 4, label, INK3);
+  let lineStart = x + lw + 16;
+  let lineEnd = x + w;
+  if (right) {
+    const rw = textWidth(right, 12, 0.96);
+    lineEnd = x + w - rw - 16;
+    s += meta(x + w, y + 4, right, INK4, 'end');
+  }
+  s += `<line x1="${lineStart.toFixed(1)}" y1="${y}" x2="${lineEnd.toFixed(1)}" y2="${y}" stroke="${LINE}" stroke-width="1"/>`;
+  return s;
 }
 
-// ─── Nav pill (rounded chrome vs. square content) ───────────────────────────
-function navPill(x, y, items, activeIdx) {
-  const fs = 11;
-  const cw = 6.9; // approx mono char advance at 11px
-  const ls = 1.2;
-  const gap = 18;
-  const padX = 16;
-  const height = 30;
-  let inner = 0;
-  const widths = items.map((it) => it.length * (cw + ls));
-  inner = widths.reduce((a, b) => a + b, 0) + gap * (items.length - 1);
-  const pillW = inner + padX * 2;
-  let out = `<rect x="${x}" y="${y}" width="${pillW}" height="${height}" rx="${height / 2}" fill="${SURFACE}" stroke="${BORDER}" stroke-width="1"/>`;
-  let tx = x + padX;
-  const ty = y + height / 2 + fs / 2 - 1.5;
-  items.forEach((label, i) => {
-    const active = i === activeIdx;
-    out += `<text class="mono" x="${tx}" y="${ty}" font-size="${fs}" letter-spacing="${ls}" fill="${active ? INK : GRAY_LIGHT}">${label}</text>`;
-    if (active) {
-      out += `<rect x="${tx - 1}" y="${y + height - 6}" width="${widths[i]}" height="1.5" fill="${INK}"/>`;
-    }
-    tx += widths[i] + gap;
-  });
-  return { svg: out, width: pillW };
-}
-
-// ─── Header / hero card ─────────────────────────────────────────────────────
+// ─── header / hero ──────────────────────────────────────────────────────────
 function renderHeader(summary) {
   const w = 900;
-  const h = 196;
-  let s = svgOpen(w, h);
+  const h = 200;
+  let s = svgHead(w, h) + cardRect(0, 0, w, h);
 
-  // Brand mark (the Kozu "K"), left.
-  const markCenterX = 76;
-  const markCenterY = 76;
-  s += logoMark(markCenterX, markCenterY, 84);
+  // Brand lockup: the mark, then the wordmark in the display serif.
+  const markH = 40;
+  const markY = 34;
+  s += logoMark(PAD, markY, markH, INK);
+  const wordX = PAD + markWidth(markH) + 16; // --kz-space-16
+  s += `<text class="display" x="${wordX.toFixed(1)}" y="${markY + markH - 4}" font-size="34" letter-spacing="-0.68" fill="${INK}">Kōzu Group</text>`;
 
-  // Wordmark.
-  const tx = 150;
-  s += `<text class="mono" x="${tx}" y="66" font-size="34" font-weight="600" letter-spacing="1.5" fill="${INK}">THE KOZU GROUP</text>`;
+  // Right-hand metadata, mirroring the site footer.
+  s += meta(w - PAD, markY + 18, 'EST. 2026', INK4, 'end');
 
-  // Nav pill.
-  const nav = navPill(tx, 88, ['OVERVIEW', 'LANGUAGES', 'ACTIVITY', 'SOURCE'], 0);
-  s += nav.svg;
+  // Hairline, then the stat strip.
+  const stripY = 104;
+  s += `<line x1="${PAD}" y1="${stripY}" x2="${w - PAD}" y2="${stripY}" stroke="${LINE}" stroke-width="1"/>`;
 
-  // Bottom stat strip.
-  const stripY = 138;
-  s += `<line x1="${PAD}" y1="${stripY}" x2="${w - PAD}" y2="${stripY}" stroke="${BORDER}" stroke-width="1"/>`;
   const stats = [
     { label: 'FOLLOWERS', value: summary.followers },
     { label: 'STARS', value: summary.stars },
@@ -191,232 +127,178 @@ function renderHeader(summary) {
   const colW = (w - PAD * 2) / stats.length;
   stats.forEach((st, i) => {
     const cx = PAD + colW * i;
-    if (i > 0) s += `<line x1="${cx}" y1="${stripY + 12}" x2="${cx}" y2="${stripY + 44}" stroke="${BORDER}" stroke-width="1"/>`;
-    s += `<text class="mono" x="${cx + 20}" y="${stripY + 34}" font-size="26" font-weight="600" fill="${INK}">${st.value}</text>`;
-    s += `<text class="mono" x="${cx + 21}" y="${stripY + 50}" font-size="10" letter-spacing="1.5" fill="${GRAY_LIGHT}">${st.label}</text>`;
+    if (i > 0) s += `<line x1="${cx.toFixed(1)}" y1="${stripY + 16}" x2="${cx.toFixed(1)}" y2="${stripY + 60}" stroke="${LINE}" stroke-width="1"/>`;
+    const tx = i === 0 ? cx : cx + 24;
+    s += `<text class="display" x="${tx.toFixed(1)}" y="${stripY + 48}" font-size="32" fill="${INK}">${st.value}</text>`;
+    s += meta(tx + 1, stripY + 68, st.label, INK4);
   });
 
-  s += `</svg>`;
-  return s;
+  return s + '</svg>';
 }
 
-// ─── Languages panel (composable) ───────────────────────────────────────────
+// ─── languages panel ────────────────────────────────────────────────────────
 function langPanel(w, h, langs) {
-  const filtered = langs.filter((l) => parseFloat(l.percent) >= 1.0).slice(0, 6);
-  const rowH = 34;
-  const headerBottom = PAD + 40;
-  // vertically centre the rows in the space below the header
-  const top = headerBottom + Math.max(0, (h - headerBottom - filtered.length * rowH - 8) / 2);
-  let s = cardRect(0, 0, w, h) + cardHeader(w, '02', 'LANGUAGES');
+  const shown = langs.filter((l) => parseFloat(l.percent) >= 1.0).slice(0, 6);
+  let s = cardRect(0, 0, w, h) + ruleLabel(PAD, PAD + 8, w - PAD * 2, 'LANGUAGES');
 
-  const barX = 138;
-  const barMax = w - PAD - barX - 44;
-  const maxPct = Math.max(...filtered.map((l) => parseFloat(l.percent)), 1);
+  const rowH = 32;
+  const top = PAD + 44;
+  const barX = 132;
+  const barMax = w - PAD - barX - 46;
+  const max = Math.max(...shown.map((l) => parseFloat(l.percent)), 1);
 
-  filtered.forEach((lang, i) => {
-    const y = top + i * rowH;
-    const cy = y + rowH / 2;
-    const idx = String(i + 1).padStart(2, '0');
-    const shade = BAR_RAMP[Math.min(i, BAR_RAMP.length - 1)];
-    const pct = parseFloat(lang.percent);
-    const bw = Math.max((pct / maxPct) * barMax, 3);
-    s += `<text class="mono" x="${PAD}" y="${cy + 4}" font-size="12" fill="${GRAY_LIGHT}">${idx}</text>`;
-    s += `<text x="${PAD + 26}" y="${cy + 4}" font-size="12.5" fill="${INK}">${escapeXml(lang.name)}</text>`;
-    s += `<rect x="${barX}" y="${cy - 5}" width="${barMax}" height="10" rx="1" fill="#efefef"/>`;
-    s += `<rect class="bar" x="${barX}" y="${cy - 5}" width="${bw.toFixed(1)}" height="10" rx="1" fill="${shade}" style="animation-delay:${(i * 0.09).toFixed(2)}s"/>`;
-    s += `<text class="mono" x="${w - PAD}" y="${cy + 4}" font-size="12" fill="${GRAY_MID}" text-anchor="end">${lang.percent}%</text>`;
+  shown.forEach((lang, i) => {
+    const cy = top + i * rowH + rowH / 2;
+    const bw = Math.max((parseFloat(lang.percent) / max) * barMax, 2);
+    s += `<text x="${PAD}" y="${cy + 4}" font-size="12" letter-spacing="0.96" fill="${INK4}">${String(i + 1).padStart(2, '0')}</text>`;
+    s += `<text x="${PAD + 26}" y="${cy + 4}" font-size="13" letter-spacing="0.13" fill="${INK}">${esc(lang.name)}</text>`;
+    s += `<rect x="${barX}" y="${cy - 4}" width="${barMax}" height="8" fill="${PAPER_INSET}"/>`;
+    s += `<rect x="${barX}" y="${cy - 4}" width="${bw.toFixed(1)}" height="8" fill="${BAR_RAMP[Math.min(i, BAR_RAMP.length - 1)]}"/>`;
+    s += `<text x="${w - PAD}" y="${cy + 4}" font-size="12" fill="${INK3}" text-anchor="end">${lang.percent}%</text>`;
   });
   return s;
 }
 
-// ─── Contribution activity panel (composable, monochrome heatmap) ────────────
-function activityPanel(w, h, weeks, totalContributions) {
+// ─── activity panel ─────────────────────────────────────────────────────────
+function activityPanel(w, h, weeks, total) {
+  let s = cardRect(0, 0, w, h) + ruleLabel(PAD, PAD + 8, w - PAD * 2, 'ACTIVITY', `${total} / YEAR`);
+
   const cell = 8;
   const gap = 2;
   const stride = cell + gap;
-  const gutterL = 22; // day labels
-  const labelTop = 14; // month labels
-  const graphX = PAD + gutterL;
-  const graphMaxW = w - PAD - graphX;
-  const weeksFit = Math.floor(graphMaxW / stride);
-  const shown = weeks.slice(Math.max(0, weeks.length - weeksFit));
+  const gutter = 26; // day labels
+  const gx = PAD + gutter;
+  const fit = Math.floor((w - PAD - gx) / stride);
+  const shown = weeks.slice(Math.max(0, weeks.length - fit));
 
-  const graphH = 7 * stride;
-  const blockH = labelTop + graphH + 20 + 8; // month labels + grid + legend
-  const headerBottom = PAD + 40;
-  const blockTop = headerBottom + Math.max(0, (h - headerBottom - blockH) / 2);
-  const graphY = blockTop + labelTop;
-  const legendY = graphY + graphH + 20;
-  let s = cardRect(0, 0, w, h) + cardHeader(w, '03', 'ACTIVITY');
+  const gridH = 7 * stride;
+  const blockH = 14 + gridH + 26;
+  const top = PAD + 44 + Math.max(0, (h - (PAD + 44) - blockH - PAD) / 2);
+  const gy = top + 14;
 
-  // total caption (right-aligned in header row)
-  s += `<text class="mono" x="${w - PAD}" y="${PAD + 4}" font-size="11" letter-spacing="1" fill="${GRAY_LIGHT}" text-anchor="end">${totalContributions} / YEAR</text>`;
-
-  // month labels
   const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  let lastMonth = -1;
-  let labels = '';
-  shown.forEach((week, wi) => {
-    const first = week.contributionDays.find((d) => d && d.date);
-    if (!first) return;
-    const m = new Date(first.date + 'T00:00:00').getMonth();
-    if (m !== lastMonth && wi % 4 === 0) {
-      labels += `<text class="mono" x="${graphX + wi * stride}" y="${graphY - 4}" font-size="9" letter-spacing="0.5" fill="${GRAY_LIGHT}">${MONTHS[m]}</text>`;
-      lastMonth = m;
+  let last = -1;
+  shown.forEach((wk, i) => {
+    const d = wk.contributionDays.find((x) => x && x.date);
+    if (!d) return;
+    const m = new Date(d.date + 'T00:00:00').getMonth();
+    if (m !== last && i % 4 === 0) {
+      s += `<text x="${(gx + i * stride).toFixed(1)}" y="${gy - 5}" font-size="11" letter-spacing="0.5" fill="${INK4}">${MONTHS[m]}</text>`;
+      last = m;
     }
   });
 
-  // day labels (Mon / Wed / Fri)
-  const DAYS = ['', 'MON', '', 'WED', '', 'FRI', ''];
-  DAYS.forEach((label, d) => {
-    if (label) labels += `<text class="mono" x="${graphX - 6}" y="${graphY + d * stride + cell}" font-size="8" fill="${GRAY_LIGHT}" text-anchor="end">${label}</text>`;
+  ['', 'MON', '', 'WED', '', 'FRI', ''].forEach((lab, d) => {
+    if (lab) s += `<text x="${gx - 8}" y="${gy + d * stride + cell}" font-size="11" fill="${INK4}" text-anchor="end">${lab}</text>`;
   });
 
-  // cells
-  let cells = '';
-  shown.forEach((week, wi) => {
+  shown.forEach((wk, i) => {
     for (let d = 0; d < 7; d++) {
-      const day = week.contributionDays[d];
+      const day = wk.contributionDays[d];
       if (!day) continue;
       const lvl = day.level !== undefined ? day.level : levelForCount(day.contributionCount);
-      const x = graphX + wi * stride;
-      const y = graphY + d * stride;
-      const delay = (wi * 0.014).toFixed(3);
-      cells += `<rect class="cell" x="${x}" y="${y}" width="${cell}" height="${cell}" rx="1.5" fill="${HEAT_RAMP[lvl]}" style="animation-delay:${delay}s"/>`;
+      s += `<rect x="${(gx + i * stride).toFixed(1)}" y="${gy + d * stride}" width="${cell}" height="${cell}" fill="${HEAT_RAMP[lvl]}"/>`;
     }
   });
 
-  // legend
+  // Legend
   const sq = 8;
   const sgap = 3;
-  const legTotal = HEAT_RAMP.length * sq + (HEAT_RAMP.length - 1) * sgap;
-  const cx = (w - legTotal) / 2;
-  let legend = `<text class="mono" x="${cx - 8}" y="${legendY + sq - 1}" font-size="9" fill="${GRAY_LIGHT}" text-anchor="end">LESS</text>`;
+  const totalW = HEAT_RAMP.length * sq + (HEAT_RAMP.length - 1) * sgap;
+  const lx = w - PAD - totalW - 40;
+  const ly = gy + gridH + 18;
+  s += `<text x="${lx - 8}" y="${ly + sq - 1}" font-size="11" fill="${INK4}" text-anchor="end">LESS</text>`;
   HEAT_RAMP.forEach((c, i) => {
-    legend += `<rect x="${cx + i * (sq + sgap)}" y="${legendY}" width="${sq}" height="${sq}" rx="1.5" fill="${c}"/>`;
+    s += `<rect x="${(lx + i * (sq + sgap)).toFixed(1)}" y="${ly}" width="${sq}" height="${sq}" fill="${c}"/>`;
   });
-  legend += `<text class="mono" x="${cx + legTotal + 8}" y="${legendY + sq - 1}" font-size="9" fill="${GRAY_LIGHT}">MORE</text>`;
-
-  return s + labels + cells + legend;
+  s += `<text x="${(lx + totalW + 8).toFixed(1)}" y="${ly + sq - 1}" font-size="11" fill="${INK4}">MORE</text>`;
+  return s;
 }
 
-// Standalone single cards (kept for reuse / direct embedding).
-function renderLanguages(langs) {
-  const w = 440;
-  return svgHead(w, H_HALF) + langPanel(w, H_HALF, langs) + `</svg>`;
-}
-function renderContributions(weeks, totalContributions) {
-  const w = 440;
-  return svgHead(w, H_HALF) + activityPanel(w, H_HALF, weeks, totalContributions) + `</svg>`;
-}
-
-// Combined "row": languages + activity side by side in one scalable image.
-function renderRow(langs, weeks, totalContributions) {
+/** The two data panels, side by side in one scalable image. */
+function renderRow(langs, weeks, total) {
   const panelW = 430;
   const gap = 40;
   const w = panelW * 2 + gap;
-  let s = svgHead(w, H_HALF);
-  s += `<g transform="translate(0,0)">${langPanel(panelW, H_HALF, langs)}</g>`;
-  s += `<g transform="translate(${panelW + gap},0)">${activityPanel(panelW, H_HALF, weeks, totalContributions)}</g>`;
-  return s + `</svg>`;
+  let s = svgHead(w, H_ROW);
+  s += `<g>${langPanel(panelW, H_ROW, langs)}</g>`;
+  s += `<g transform="translate(${panelW + gap},0)">${activityPanel(panelW, H_ROW, weeks, total)}</g>`;
+  return s + '</svg>';
 }
 
-// ─── Streak / overview card (pixel numbers + sparkline) ──────────────────────
+// ─── contributions / streak ─────────────────────────────────────────────────
 function renderStreak(streak, weeks) {
   const w = 900;
-  const h = 208;
-  let s = svgOpen(w, h);
-  s += cardHeader(w, '04', 'STREAK');
+  const h = 200;
+  let s = svgHead(w, h) + cardRect(0, 0, w, h);
+  s += ruleLabel(PAD, PAD + 8, w - PAD * 2, 'CONTRIBUTIONS');
 
-  const top = PAD + 40;
-  const numbers = [
-    { value: streak.total, label: 'TOTAL CONTRIBUTIONS' },
+  const figures = [
+    { value: streak.total, label: 'TOTAL' },
     { value: streak.current, label: 'CURRENT STREAK' },
     { value: streak.longest, label: 'LONGEST STREAK' },
   ];
-
-  // Left: three pixel-number columns.
-  const cellSz = 6;
-  const colW = 190;
-  const colStart = PAD;
-  numbers.forEach((n, i) => {
-    const colCx = colStart + colW * i + colW / 2;
-    const txt = String(n.value);
-    const nw = pixelWidth(txt, cellSz);
-    const nx = colCx - nw / 2;
-    const ny = top + 18;
-    const pix = pixelDigits(txt, nx, ny, cellSz, INK, '');
-    s += `<g class="pix" style="animation-delay:${(i * 0.12 + 0.1).toFixed(2)}s">${pix.svg}</g>`;
-    s += `<text class="mono" x="${colCx}" y="${ny + 42 + 22}" font-size="10.5" letter-spacing="1.3" fill="${GRAY_LIGHT}" text-anchor="middle">${n.label}</text>`;
-    if (i < numbers.length - 1) {
-      const lx = colStart + colW * (i + 1);
-      s += `<line x1="${lx}" y1="${top + 6}" x2="${lx}" y2="${top + 78}" stroke="${BORDER}" stroke-width="1"/>`;
-    }
+  const top = PAD + 56;
+  const colW = 176;
+  figures.forEach((f, i) => {
+    const x = PAD + colW * i;
+    if (i > 0) s += `<line x1="${(x - 24).toFixed(1)}" y1="${top - 8}" x2="${(x - 24).toFixed(1)}" y2="${top + 62}" stroke="${LINE}" stroke-width="1"/>`;
+    s += `<text class="display" x="${x}" y="${top + 34}" font-size="42" fill="${INK}">${f.value}</text>`;
+    s += meta(x + 1, top + 56, f.label, INK4);
   });
 
-  // Right: weekly-contribution sparkline.
-  const sparkX = colStart + colW * 3 + 30;
-  const sparkY = top + 6;
-  const sparkW = w - PAD - sparkX;
-  const sparkH = 80;
-  s += `<line x1="${sparkX - 15}" y1="${top + 6}" x2="${sparkX - 15}" y2="${top + 78}" stroke="${BORDER}" stroke-width="1"/>`;
-  s += `<text class="mono" x="${sparkX}" y="${sparkY + 4}" font-size="10.5" letter-spacing="1.3" fill="${GRAY_LIGHT}">WEEKLY ACTIVITY · LAST ${Math.min(weeks.length, 30)} WEEKS</text>`;
-  s += sparkline(weeks, sparkX, sparkY + 16, sparkW, sparkH);
-
-  s += `</svg>`;
-  return s;
+  const sx = PAD + colW * 3 + 8;
+  const sw = w - PAD - sx;
+  s += `<line x1="${(sx - 24).toFixed(1)}" y1="${top - 8}" x2="${(sx - 24).toFixed(1)}" y2="${top + 62}" stroke="${LINE}" stroke-width="1"/>`;
+  s += meta(sx, top - 12, 'WEEKLY', INK4);
+  s += sparkline(weeks, sx, top, sw, 62);
+  return s + '</svg>';
 }
 
 function sparkline(weeks, x, y, w, h) {
   const recent = weeks.slice(Math.max(0, weeks.length - 30));
   const vals = recent.map((wk) => wk.contributionDays.reduce((a, d) => a + ((d && d.contributionCount) || 0), 0));
-  const maxV = Math.max(...vals, 1);
+  const max = Math.max(...vals, 1);
   const n = vals.length;
   const step = n > 1 ? w / (n - 1) : w;
-  const pts = vals.map((v, i) => [x + i * step, y + h - (v / maxV) * h]);
+  const pts = vals.map((v, i) => [x + i * step, y + h - (v / max) * h]);
   const line = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
-  const area = `${x},${y + h} ${line} ${x + (n - 1) * step},${y + h}`;
-  const baseline = `<line x1="${x}" y1="${y + h}" x2="${x + w}" y2="${y + h}" stroke="${BORDER}" stroke-width="1"/>`;
-  const fill = `<polygon class="sparkfill" points="${area}" fill="${INK}" opacity="0.05"/>`;
-  const stroke = `<polyline class="spark" points="${line}" fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-  // marker on last point
+  let s = `<line x1="${x}" y1="${y + h}" x2="${(x + w).toFixed(1)}" y2="${y + h}" stroke="${LINE}" stroke-width="1"/>`;
+  s += `<polygon points="${x},${y + h} ${line} ${(x + (n - 1) * step).toFixed(1)},${y + h}" fill="${INK}" fill-opacity="0.06"/>`;
+  s += `<polyline points="${line}" fill="none" stroke="${INK2}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   const last = pts[pts.length - 1];
-  const dot = `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3" fill="${INK}"/>`;
-  return baseline + fill + stroke + dot;
+  s += `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.5" fill="${INK}"/>`;
+  return s;
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────
-function escapeXml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function levelForCount(count) {
-  if (!count) return 0;
-  if (count <= 2) return 1;
-  if (count <= 5) return 2;
-  if (count <= 8) return 3;
+function levelForCount(c) {
+  if (!c) return 0;
+  if (c <= 2) return 1;
+  if (c <= 5) return 2;
+  if (c <= 8) return 3;
   return 4;
 }
 
 function computeStreak(weeks) {
-  const allDays = weeks.flatMap((w) => w.contributionDays).filter(Boolean);
+  const days = weeks.flatMap((w) => w.contributionDays).filter(Boolean);
   const today = new Date().toISOString().split('T')[0];
   let current = 0;
-  for (let i = allDays.length - 1; i >= 0; i--) {
-    const day = allDays[i];
-    if (day.contributionCount > 0) current++;
-    else if (i === allDays.length - 1 && day.date === today) continue;
+  for (let i = days.length - 1; i >= 0; i--) {
+    const d = days[i];
+    if (d.contributionCount > 0) current++;
+    else if (i === days.length - 1 && d.date === today) continue;
     else break;
   }
   let longest = 0;
-  let temp = 0;
-  for (const day of allDays) {
-    if (day.contributionCount > 0) { temp++; longest = Math.max(longest, temp); } else temp = 0;
+  let run = 0;
+  for (const d of days) {
+    if (d.contributionCount > 0) { run++; longest = Math.max(longest, run); } else run = 0;
   }
   return { current, longest };
 }
 
-// ─── data fetch (CI path) ───────────────────────────────────────────────────
+// ─── data ───────────────────────────────────────────────────────────────────
 async function queryGraphQL(query) {
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
@@ -427,14 +309,6 @@ async function queryGraphQL(query) {
   const json = await res.json();
   if (json.errors) throw new Error(json.errors[0].message);
   return json.data;
-}
-
-async function fetchRest(endpoint) {
-  const headers = { Accept: 'application/vnd.github.v3+json', 'User-Agent': `${USERNAME}-profile` };
-  if (TOKEN) headers.Authorization = `token ${TOKEN}`;
-  const res = await fetch(`https://api.github.com/${endpoint}`, { headers });
-  if (!res.ok) throw new Error(`REST error: ${res.status} on ${endpoint}`);
-  return res.json();
 }
 
 async function fetchData() {
@@ -461,7 +335,6 @@ async function fetchData() {
 
   const user = gql.user;
   const repos = user.repositories.nodes;
-
   const summary = {
     followers: user.followers.totalCount,
     repos: user.repositories.totalCount,
@@ -469,27 +342,29 @@ async function fetchData() {
     forks: repos.reduce((a, r) => a + r.forkCount, 0),
   };
 
-  const langTotals = {};
-  let totalBytes = 0;
-  repos.forEach((repo) => {
-    (repo.languages?.edges || []).forEach((edge) => {
-      langTotals[edge.node.name] = (langTotals[edge.node.name] || 0) + edge.size;
-      totalBytes += edge.size;
+  const totals = {};
+  let bytes = 0;
+  repos.forEach((r) => {
+    (r.languages?.edges || []).forEach((e) => {
+      totals[e.node.name] = (totals[e.node.name] || 0) + e.size;
+      bytes += e.size;
     });
   });
-  const langs = Object.entries(langTotals)
-    .map(([name, bytes]) => ({ name, percent: ((bytes / totalBytes) * 100).toFixed(1) }))
+  const langs = Object.entries(totals)
+    .map(([name, b]) => ({ name, percent: ((b / bytes) * 100).toFixed(1) }))
     .sort((a, b) => parseFloat(b.percent) - parseFloat(a.percent))
     .slice(0, 8);
 
   const cal = user.contributionsCollection.contributionCalendar;
-  const weeks = cal.weeks;
-  const streak = { total: cal.totalContributions, ...computeStreak(weeks) };
-
-  return { summary, langs, weeks, totalContributions: cal.totalContributions, streak };
+  return {
+    summary,
+    langs,
+    weeks: cal.weeks,
+    totalContributions: cal.totalContributions,
+    streak: { total: cal.totalContributions, ...computeStreak(cal.weeks) },
+  };
 }
 
-// ─── writer ─────────────────────────────────────────────────────────────────
 function writeCards(data) {
   fs.mkdirSync('stats', { recursive: true });
   fs.writeFileSync('stats/header.svg', renderHeader(data.summary));
@@ -499,24 +374,14 @@ function writeCards(data) {
 
 async function main() {
   try {
-    const data = await fetchData();
-    writeCards(data);
-    console.log('Done — Ghost stat cards generated.');
+    writeCards(await fetchData());
+    console.log('Done — Kōzu stat cards generated.');
   } catch (err) {
     console.error('Error:', err.message);
     process.exit(1);
   }
 }
 
-module.exports = {
-  renderHeader,
-  renderLanguages,
-  renderContributions,
-  renderRow,
-  renderStreak,
-  computeStreak,
-  writeCards,
-  levelForCount,
-};
+module.exports = { renderHeader, renderRow, renderStreak, langPanel, activityPanel, computeStreak, writeCards, levelForCount };
 
 if (require.main === module) main();
