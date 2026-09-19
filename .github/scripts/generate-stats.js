@@ -3,8 +3,8 @@
  *
  * Rendered to self-contained SVG in the Kōzu Group design language: neutral
  * paper, near-black ink, a four-step text ramp, hairlines before shadows, no
- * radii, no decorative colour. Quattrocento (display) carries the wordmark and
- * the figures; Inter carries everything else. The cards are deliberately
+ * radii, no decorative colour. Quattrocento (display) carries the figures;
+ * Inter carries everything else. The cards are deliberately
  * static — the brand reserves motion for the typewriter on kozugroup.com.
  *
  * Because GitHub serves these as <img>, webfonts never load; the families below
@@ -48,9 +48,6 @@ const MARK_H = 1490;
 function logoMark(x, y, height, fill) {
   const s = height / MARK_H;
   return `<g transform="translate(${x.toFixed(2)},${y.toFixed(2)}) scale(${s.toFixed(5)})"><path d="${MARK_PATH}" fill="${fill || INK}"/></g>`;
-}
-function markWidth(height) {
-  return (MARK_W / MARK_H) * height;
 }
 
 // ─── primitives ─────────────────────────────────────────────────────────────
@@ -101,21 +98,19 @@ function ruleLabel(x, y, w, label, right) {
 // ─── header / hero ──────────────────────────────────────────────────────────
 function renderHeader(summary) {
   const w = 900;
-  const h = 200;
+  const h = 184;
   let s = svgHead(w, h) + cardRect(0, 0, w, h);
 
-  // Brand lockup: the mark, then the wordmark in the display serif.
-  const markH = 40;
-  const markY = 34;
+  // The mark alone, at the site header size (28px). No wordmark.
+  const markH = 28;
+  const markY = 32;
   s += logoMark(PAD, markY, markH, INK);
-  const wordX = PAD + markWidth(markH) + 16; // --kz-space-16
-  s += `<text class="display" x="${wordX.toFixed(1)}" y="${markY + markH - 4}" font-size="34" letter-spacing="-0.68" fill="${INK}">Kōzu Group</text>`;
 
   // Right-hand metadata, mirroring the site footer.
   s += meta(w - PAD, markY + 18, 'EST. 2026', INK4, 'end');
 
   // Hairline, then the stat strip.
-  const stripY = 104;
+  const stripY = 88;
   s += `<line x1="${PAD}" y1="${stripY}" x2="${w - PAD}" y2="${stripY}" stroke="${LINE}" stroke-width="1"/>`;
 
   const stats = [
